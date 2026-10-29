@@ -1,7 +1,7 @@
 import enum
 import uuid
 from typing import TYPE_CHECKING, List, Optional
-from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String, Text, inspect
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, TimestampMixin, UUIDMixin
 
@@ -74,6 +74,27 @@ class LearningPath(Base, UUIDMixin, TimestampMixin):
     def __repr__(self) -> str:
         return f"<LearningPath '{self.title}' (user_id={self.user_id}, status={self.status})>"
 
+    @property
+    def total_items(self) -> int:
+        insp = inspect(self)
+        if "items" in insp.dict and self.items:
+            return len(self.items)
+        return 0
+
+    @property
+    def completed_items(self) -> int:
+        insp = inspect(self)
+        if "items" in insp.dict and self.items:
+            return sum(1 for item in self.items if item.is_completed)
+        return 0
+
+    @property
+    def completion_pct(self) -> float:
+        total = self.total_items
+        if not total:
+            return 0.0
+        return round((self.completed_items / total) * 100, 1)
+
 
 class LearningPathItem(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "learning_path_items"
@@ -124,3 +145,17 @@ class LearningPathItem(Base, UUIDMixin, TimestampMixin):
 
     def __repr__(self) -> str:
         return f"<LearningPathItem path={self.learning_path_id} lesson={self.lesson_id} pos={self.position}>"
+
+    @property
+    def lesson_title(self) -> str:
+        insp = inspect(self)
+        if "lesson" in insp.dict and self.lesson:
+            return self.lesson.title
+        return ""
+
+    @property
+    def estimated_minutes(self) -> int:
+        insp = inspect(self)
+        if "lesson" in insp.dict and self.lesson:
+            return self.lesson.estimated_minutes
+        return 0
