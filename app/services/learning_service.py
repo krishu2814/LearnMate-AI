@@ -4,13 +4,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import NotFoundException
 from app.models.course import DifficultyLevel
 from app.models.learning_path import LearningPath, LearningPathItem
+from app.models.progress import ProgressStatus
 from app.repositories.learning_repo import LearningRepository
-from app.schemas.course import CourseDetailResponse, CourseResponse
+from app.schemas.course import CourseDetailResponse, CourseResponse, LessonDetailResponse
 from app.schemas.learning_path import (
     LearningPathCreate,
     LearningPathDetailResponse,
     LearningPathResponse,
     LearningPathUpdate,
+)
+from app.schemas.progress import (
+    CourseProgressSummary,
+    DashboardProgressResponse,
+    LessonProgressResponse,
+    LessonProgressUpdate,
+    PathProgressSummary,
 )
 
 
@@ -116,3 +124,94 @@ class LearningService:
 
         await self.repo.delete_learning_path(path)
         await self.db.commit()
+
+    async def get_lesson(self, lesson_id: str) -> LessonDetailResponse:
+        lesson = await self.repo.get_lesson_by_id(lesson_id)
+        if not lesson:
+            raise NotFoundException(f"Lesson '{lesson_id}' not found")
+        return LessonDetailResponse.model_validate(lesson)
+
+    async def update_lesson_progress(
+        self,
+        user_id: str,
+        lesson_id: str,
+        payload: LessonProgressUpdate,
+    ) -> LessonProgressResponse:
+        lesson = await self.repo.get_lesson_by_id(lesson_id)
+        if not lesson:
+            raise NotFoundException(f"Lesson '{lesson_id}' not found")
+
+        progress = await self.repo.upsert_lesson_progress(
+            user_id=user_id,
+            lesson_id=lesson_id,
+            status=payload.status,
+            time_spent_seconds=payload.time_spent_seconds,
+            additional_seconds=payload.additional_seconds or 0,
+        )
+
+        if payload.status == ProgressStatus.COMPLETED:
+            await self.repo.sync_learning_path_items_completed(user_id=user_id, lesson_id=lesson_id)
+
+        await self.db.commit()
+        await self.db.refresh(progress)
+        return LessonProgressResponse.model_validate(progress)
+
+    async def get_dashboard_progress(self, user_id: str) -> DashboardProgressResponse:
+        all_progress = await self.repo.get_user_all_progress(user_id)
+        completed_lesson_ids = {p.lesson_id for p in all_progress if p.status == ProgressStatus.COMPLETED}
+        in_progress_count = sum(1 for p in all_progress if p.status == ProgressStatus.IN_PROGRESS)
+        total_time_spent = sum(p.time_spent_seconds for p in all_progress)
+
+        courses = await self.repo.get_all_courses_with_lessons()
+        total_lessons_available = 0
+        courses_progress = []
+
+        for course in courses:
+            course_lesson_ids = [
+                lesson.id
+                for module in course.modules
+                for lesson in module.lessons
+            ]
+            course_total = len(course_lesson_ids)
+            total_lessons_available += course_total
+            course_completed = sum(1 for lid in course_lesson_ids if lid in completed_lesson_ids)
+            course_pct = round((course_completed / course_total) * 100, 1) if course_total > 0 else 0.0
+
+            courses_progress.append(
+                CourseProgressSummary(
+                    course_id=course.id,
+                    course_title=course.title,
+                    total_lessons=course_total,
+                    completed_lessons=course_completed,
+                    completion_pct=course_pct,
+                )
+            )
+
+        active_paths = await self.repo.list_learning_paths(user_id=user_id, limit=50)
+        paths_progress = [
+            PathProgressSummary(
+                path_id=p.id,
+                title=p.title,
+                total_items=p.total_items,
+                completed_items=p.completed_items,
+                completion_pct=p.completion_pct,
+            )
+            for p in active_paths
+        ]
+
+        overall_pct = (
+            round((len(completed_lesson_ids) / total_lessons_available) * 100, 1)
+            if total_lessons_available > 0
+            else 0.0
+        )
+
+        return DashboardProgressResponse(
+            total_lessons_available=total_lessons_available,
+            completed_lessons=len(completed_lesson_ids),
+            in_progress_lessons=in_progress_count,
+            overall_completion_pct=overall_pct,
+            total_time_spent_seconds=total_time_spent,
+            total_time_spent_minutes=total_time_spent // 60,
+            courses_progress=courses_progress,
+            active_paths_progress=paths_progress,
+        )

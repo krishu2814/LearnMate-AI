@@ -1,10 +1,12 @@
+from datetime import datetime, timezone
 from typing import List, Optional, Sequence
-from sqlalchemy import select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.course import Course, DifficultyLevel, Lesson, Module
 from app.models.learning_path import ItemType, LearningPath, LearningPathItem, PathStatus
+from app.models.progress import LessonProgress, ProgressStatus
 
 
 class LearningRepository:
@@ -147,3 +149,98 @@ class LearningRepository:
     async def delete_learning_path(self, path: LearningPath) -> None:
         await self.db.delete(path)
         await self.db.flush()
+
+    async def get_lesson_progress(
+        self,
+        user_id: str,
+        lesson_id: str,
+    ) -> Optional[LessonProgress]:
+        stmt = select(LessonProgress).where(
+            LessonProgress.user_id == user_id,
+            LessonProgress.lesson_id == lesson_id,
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def upsert_lesson_progress(
+        self,
+        user_id: str,
+        lesson_id: str,
+        status: ProgressStatus = ProgressStatus.COMPLETED,
+        time_spent_seconds: Optional[int] = None,
+        additional_seconds: int = 0,
+    ) -> LessonProgress:
+        progress = await self.get_lesson_progress(user_id=user_id, lesson_id=lesson_id)
+        now = datetime.now(timezone.utc)
+
+        if progress:
+            progress.status = status
+            if time_spent_seconds is not None:
+                progress.time_spent_seconds = time_spent_seconds
+            elif additional_seconds > 0:
+                progress.time_spent_seconds += additional_seconds
+
+            if status in (ProgressStatus.IN_PROGRESS, ProgressStatus.COMPLETED) and not progress.started_at:
+                progress.started_at = now
+            if status == ProgressStatus.COMPLETED and not progress.completed_at:
+                progress.completed_at = now
+        else:
+            initial_time = time_spent_seconds if time_spent_seconds is not None else additional_seconds
+            started_at = now if status in (ProgressStatus.IN_PROGRESS, ProgressStatus.COMPLETED) else None
+            completed_at = now if status == ProgressStatus.COMPLETED else None
+
+            progress = LessonProgress(
+                user_id=user_id,
+                lesson_id=lesson_id,
+                status=status,
+                time_spent_seconds=initial_time,
+                started_at=started_at,
+                completed_at=completed_at,
+            )
+            self.db.add(progress)
+
+        await self.db.flush()
+        await self.db.refresh(progress)
+        return progress
+
+    async def sync_learning_path_items_completed(
+        self,
+        user_id: str,
+        lesson_id: str,
+    ) -> None:
+        """Mark corresponding items across all the user's learning paths as completed."""
+        user_path_subquery = select(LearningPath.id).where(LearningPath.user_id == user_id)
+        stmt = (
+            update(LearningPathItem)
+            .where(
+                LearningPathItem.lesson_id == lesson_id,
+                LearningPathItem.learning_path_id.in_(user_path_subquery),
+            )
+            .values(is_completed=True)
+        )
+        await self.db.execute(stmt)
+        await self.db.flush()
+
+    async def get_user_all_progress(
+        self,
+        user_id: str,
+    ) -> Sequence[LessonProgress]:
+        stmt = select(LessonProgress).where(LessonProgress.user_id == user_id)
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+
+    async def get_all_lessons_count(self) -> int:
+        stmt = select(func.count(Lesson.id))
+        result = await self.db.execute(stmt)
+        return result.scalar() or 0
+
+    async def get_all_courses_with_lessons(self) -> Sequence[Course]:
+        stmt = (
+            select(Course)
+            .where(Course.is_published.is_(True))
+            .options(
+                selectinload(Course.modules).selectinload(Module.lessons),
+            )
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
