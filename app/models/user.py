@@ -7,6 +7,8 @@ from app.db.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
     from app.models.auth import RefreshToken
+    from app.models.learning_path import LearningPath
+    from app.models.progress import LessonProgress
 
 
 class SkillLevel(str, enum.Enum):
@@ -61,6 +63,18 @@ class User(Base, UUIDMixin, TimestampMixin):
     # Relationships
     refresh_tokens: Mapped[List["RefreshToken"]] = relationship(
         "RefreshToken",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    learning_paths: Mapped[List["LearningPath"]] = relationship(
+        "LearningPath",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    lesson_progress: Mapped[List["LessonProgress"]] = relationship(
+        "LessonProgress",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin",
