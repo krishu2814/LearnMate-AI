@@ -139,8 +139,9 @@ async def app_exception_handler(request: Request, exc: AppException) -> JSONResp
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     request_id = request.headers.get("X-Request-ID")
+    status_code = getattr(status, "HTTP_422_UNPROCESSABLE_CONTENT", status.HTTP_422_UNPROCESSABLE_ENTITY)
     return build_error_response(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status_code,
         code="VALIDATION_ERROR",
         message="Request validation failed",
         request_id=request_id,
