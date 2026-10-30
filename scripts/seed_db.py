@@ -8,6 +8,58 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from sqlalchemy import select
 from app.db.session import AsyncSessionLocal, engine
 from app.models.course import Course, DifficultyLevel, Lesson, Module
+from app.models.quiz import QuestionType, Quiz, QuizQuestion
+
+
+async def seed_quizzes_if_needed(session) -> None:
+    existing_quiz = await session.execute(select(Quiz).limit(1))
+    if existing_quiz.scalar_one_or_none():
+        print("Database already contains quizzes. Skipping quiz seed.")
+        return
+
+    first_lesson = (await session.execute(select(Lesson).order_by(Lesson.position).limit(1))).scalar_one_or_none()
+    lesson_id = first_lesson.id if first_lesson else None
+
+    quiz1 = Quiz(
+        title="Python Concurrency & Async Architecture Quiz",
+        topic="Backend Development",
+        difficulty=DifficultyLevel.INTERMEDIATE,
+        lesson_id=lesson_id,
+        question_count=3,
+    )
+    session.add(quiz1)
+    await session.flush()
+
+    q1 = QuizQuestion(
+        quiz_id=quiz1.id,
+        question="Which keyword in Python is used to declare an asynchronous function?",
+        question_type=QuestionType.MCQ,
+        options=["async def", "def", "await def", "thread def"],
+        correct_answer="async def",
+        explanation="In modern Python, native coroutines are defined with the 'async def' syntax.",
+        position=1,
+    )
+    q2 = QuizQuestion(
+        quiz_id=quiz1.id,
+        question="The asyncio event loop runs across multiple operating system threads simultaneously by default.",
+        question_type=QuestionType.TRUE_FALSE,
+        options=["True", "False"],
+        correct_answer="False",
+        explanation="Python's asyncio event loop is single-threaded and relies on cooperative multitasking.",
+        position=2,
+    )
+    q3 = QuizQuestion(
+        quiz_id=quiz1.id,
+        question="Which FastAPI parameter dependency is used to inject an asynchronous database session?",
+        question_type=QuestionType.MCQ,
+        options=["Depends", "Query", "Header", "Security"],
+        correct_answer="Depends",
+        explanation="FastAPI's Depends dependency injection system provides scoped resources like database sessions to route handlers.",
+        position=3,
+    )
+    session.add_all([q1, q2, q3])
+    await session.commit()
+    print("Database seeded with sample Quiz and Questions!")
 
 
 async def seed_database() -> None:
@@ -17,6 +69,8 @@ async def seed_database() -> None:
         existing_course = await session.execute(select(Course).limit(1))
         if existing_course.scalar_one_or_none():
             print("Database already contains course catalog. Skipping duplicate seed.")
+            await seed_quizzes_if_needed(session)
+            await engine.dispose()
             return
 
         # -------------------------------------------------------------
@@ -179,6 +233,7 @@ async def seed_database() -> None:
         session.add_all([ai_l2_1, ai_l2_2])
 
         await session.commit()
+        await seed_quizzes_if_needed(session)
         await engine.dispose()
         print("Database seeded successfully with 2 courses, 5 modules, and 11 lessons!")
 

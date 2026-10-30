@@ -77,6 +77,21 @@ class NotFoundException(AppException):
         )
 
 
+class BadRequestException(AppException):
+    def __init__(
+        self,
+        message: str = "Bad request",
+        code: str = "BAD_REQUEST",
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        super().__init__(
+            message=message,
+            code=code,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details=details,
+        )
+
+
 class ConflictException(AppException):
     def __init__(
         self,
