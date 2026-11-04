@@ -1,4 +1,5 @@
 import uuid
+
 import pytest
 from httpx import AsyncClient
 
@@ -31,7 +32,7 @@ async def get_seed_lesson_ids(client: AsyncClient) -> list[str]:
     first_course_id = courses_resp.json()[0]["id"]
     detail_resp = await client.get(f"/api/v1/courses/{first_course_id}")
     modules = detail_resp.json()["modules"]
-    return [l["id"] for m in modules for l in m["lessons"]]
+    return [lesson["id"] for m in modules for lesson in m["lessons"]]
 
 
 @pytest.mark.asyncio

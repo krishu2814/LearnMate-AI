@@ -1,4 +1,5 @@
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -6,6 +7,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+
 from app.core.config import settings
 
 # Create async engine for high-concurrency connection pooling
@@ -49,5 +51,5 @@ async def check_db_health() -> bool:
         async with engine.connect() as conn:
             result = await conn.execute(text("SELECT 1"))
             return result.scalar() == 1
-    except Exception:
+    except Exception:  # noqa: BLE001
         return False

@@ -1,8 +1,10 @@
 import uuid
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
+
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
@@ -24,7 +26,7 @@ class RefreshToken(Base, UUIDMixin, TimestampMixin):
         index=True,
         nullable=False,
     )
-    device_info: Mapped[Optional[str]] = mapped_column(
+    device_info: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
     )
@@ -32,7 +34,7 @@ class RefreshToken(Base, UUIDMixin, TimestampMixin):
         DateTime(timezone=True),
         nullable=False,
     )
-    revoked_at: Mapped[Optional[datetime]] = mapped_column(
+    revoked_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
@@ -48,9 +50,9 @@ class RefreshToken(Base, UUIDMixin, TimestampMixin):
         user_id: str,
         token_hash: str,
         expires_at: datetime,
-        device_info: Optional[str] = None,
-        revoked_at: Optional[datetime] = None,
-        id: Optional[str] = None,
+        device_info: str | None = None,
+        revoked_at: datetime | None = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)
@@ -63,13 +65,13 @@ class RefreshToken(Base, UUIDMixin, TimestampMixin):
     @property
     def is_active(self) -> bool:
         """Token is active if not revoked and has not expired."""
-        now = datetime.now(timezone.utc)
-        expires = self.expires_at if self.expires_at.tzinfo else self.expires_at.replace(tzinfo=timezone.utc)
+        now = datetime.now(UTC)
+        expires = self.expires_at if self.expires_at.tzinfo else self.expires_at.replace(tzinfo=UTC)
         return self.revoked_at is None and expires > now
 
     def revoke(self) -> None:
         """Mark token as revoked."""
-        self.revoked_at = datetime.now(timezone.utc)
+        self.revoked_at = datetime.now(UTC)
 
     def __repr__(self) -> str:
         return f"<RefreshToken id={self.id} user_id={self.user_id} active={self.is_active}>"

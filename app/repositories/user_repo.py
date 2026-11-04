@@ -1,4 +1,4 @@
-from typing import Optional
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,12 +9,12 @@ class UserRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_by_id(self, user_id: str) -> Optional[User]:
+    async def get_by_id(self, user_id: str) -> User | None:
         stmt = select(User).where(User.id == user_id)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> User | None:
         stmt = select(User).where(User.email == email.strip().lower())
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -23,7 +23,7 @@ class UserRepository:
         self,
         email: str,
         password_hash: str,
-        full_name: Optional[str] = None,
+        full_name: str | None = None,
         skill_level: SkillLevel = SkillLevel.BEGINNER,
         daily_study_minutes: int = 60,
         timezone: str = "UTC",

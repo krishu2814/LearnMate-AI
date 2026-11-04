@@ -1,4 +1,5 @@
 import uuid
+
 import pytest
 from httpx import AsyncClient
 
@@ -80,7 +81,7 @@ async def test_create_and_get_learning_path(client: AsyncClient):
     courses_resp = await client.get("/api/v1/courses")
     course_id = courses_resp.json()[0]["id"]
     course_detail = (await client.get(f"/api/v1/courses/{course_id}")).json()
-    lesson_ids = [l["id"] for m in course_detail["modules"] for l in m["lessons"]][:3]
+    lesson_ids = [lesson["id"] for m in course_detail["modules"] for lesson in m["lessons"]][:3]
 
     create_payload = {
         "title": "My Python Mastery Path",

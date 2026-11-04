@@ -1,5 +1,6 @@
-from typing import List, Optional
+
 from pydantic import BaseModel, ConfigDict
+
 from app.models.course import DifficultyLevel
 
 
@@ -24,8 +25,8 @@ class ModuleResponse(BaseModel):
     course_id: str
     title: str
     position: int
-    summary: Optional[str] = None
-    lessons: List[LessonResponse] = []
+    summary: str | None = None
+    lessons: list[LessonResponse] = []
 
 
 class CourseResponse(BaseModel):
@@ -40,4 +41,4 @@ class CourseResponse(BaseModel):
 
 
 class CourseDetailResponse(CourseResponse):
-    modules: List[ModuleResponse] = []
+    modules: list[ModuleResponse] = []

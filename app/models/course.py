@@ -1,8 +1,10 @@
 import enum
 import uuid
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
     from app.models.progress import LessonProgress
 
 
-class DifficultyLevel(str, enum.Enum):
+class DifficultyLevel(enum.StrEnum):
     BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"
@@ -27,7 +29,7 @@ class Course(Base, UUIDMixin, TimestampMixin):
         default=DifficultyLevel.BEGINNER,
         nullable=False,
     )
-    owner_id: Mapped[Optional[str]] = mapped_column(
+    owner_id: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
@@ -35,7 +37,7 @@ class Course(Base, UUIDMixin, TimestampMixin):
     is_published: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     # Relationships
-    modules: Mapped[List["Module"]] = relationship(
+    modules: Mapped[list["Module"]] = relationship(
         "Module",
         back_populates="course",
         cascade="all, delete-orphan",
@@ -49,9 +51,9 @@ class Course(Base, UUIDMixin, TimestampMixin):
         description: str,
         subject_tag: str,
         difficulty: DifficultyLevel = DifficultyLevel.BEGINNER,
-        owner_id: Optional[str] = None,
+        owner_id: str | None = None,
         is_published: bool = True,
-        id: Optional[str] = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)
@@ -77,11 +79,11 @@ class Module(Base, UUIDMixin, TimestampMixin):
     )
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     position: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     course: Mapped["Course"] = relationship("Course", back_populates="modules")
-    lessons: Mapped[List["Lesson"]] = relationship(
+    lessons: Mapped[list["Lesson"]] = relationship(
         "Lesson",
         back_populates="module",
         cascade="all, delete-orphan",
@@ -94,8 +96,8 @@ class Module(Base, UUIDMixin, TimestampMixin):
         course_id: str,
         title: str,
         position: int = 1,
-        summary: Optional[str] = None,
-        id: Optional[str] = None,
+        summary: str | None = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)
@@ -124,12 +126,12 @@ class Lesson(Base, UUIDMixin, TimestampMixin):
 
     # Relationships
     module: Mapped["Module"] = relationship("Module", back_populates="lessons")
-    path_items: Mapped[List["LearningPathItem"]] = relationship(
+    path_items: Mapped[list["LearningPathItem"]] = relationship(
         "LearningPathItem",
         back_populates="lesson",
         cascade="all, delete-orphan",
     )
-    progress_records: Mapped[List["LessonProgress"]] = relationship(
+    progress_records: Mapped[list["LessonProgress"]] = relationship(
         "LessonProgress",
         back_populates="lesson",
         cascade="all, delete-orphan",
@@ -142,7 +144,7 @@ class Lesson(Base, UUIDMixin, TimestampMixin):
         content: str,
         estimated_minutes: int = 15,
         position: int = 1,
-        id: Optional[str] = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)

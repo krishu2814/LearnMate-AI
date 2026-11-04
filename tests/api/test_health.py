@@ -1,5 +1,11 @@
+import json
+from unittest.mock import MagicMock
+
 import pytest
+from fastapi import Request
 from httpx import AsyncClient
+
+from app.core.exceptions import unhandled_exception_handler
 
 
 @pytest.mark.asyncio
@@ -33,3 +39,20 @@ async def test_readiness_endpoint_structure(client: AsyncClient):
     assert "checks" in data
     assert "database" in data["checks"]
     assert "redis" in data["checks"]
+
+
+@pytest.mark.asyncio
+async def test_unhandled_exception_handler():
+    mock_request = MagicMock(spec=Request)
+    mock_request.headers.get.return_value = "req-test-uuid"
+    mock_request.url = "http://testserver/api/v1/unexpected"
+
+    exc = RuntimeError("Unexpected crash")
+    response = await unhandled_exception_handler(mock_request, exc)
+
+    assert response.status_code == 500
+    body = json.loads(response.body.decode("utf-8"))
+    assert body["error"]["code"] == "INTERNAL_SERVER_ERROR"
+    assert body["error"]["request_id"] == "req-test-uuid"
+    assert body["error"]["message"] == "An unexpected server error occurred."
+

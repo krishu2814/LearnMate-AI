@@ -1,4 +1,5 @@
-from typing import Annotated, List, Optional
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,15 +13,15 @@ router = APIRouter(prefix="/courses", tags=["Courses"])
 
 @router.get(
     "",
-    response_model=List[CourseResponse],
+    response_model=list[CourseResponse],
     status_code=status.HTTP_200_OK,
     summary="List all published courses",
 )
 async def list_courses(
     db: Annotated[AsyncSession, Depends(get_db)],
-    difficulty: Optional[DifficultyLevel] = Query(None, description="Filter by difficulty level"),
-    subject_tag: Optional[str] = Query(None, description="Filter by subject tag"),
-) -> List[CourseResponse]:
+    difficulty: DifficultyLevel | None = Query(None, description="Filter by difficulty level"),
+    subject_tag: str | None = Query(None, description="Filter by subject tag"),
+) -> list[CourseResponse]:
     """Retrieve catalog of published courses with optional filtering."""
     service = LearningService(db)
     return await service.get_courses(difficulty=difficulty, subject_tag=subject_tag)

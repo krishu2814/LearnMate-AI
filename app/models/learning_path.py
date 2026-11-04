@@ -1,8 +1,10 @@
 import enum
 import uuid
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String, Text, inspect
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
@@ -10,14 +12,14 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
-class PathStatus(str, enum.Enum):
+class PathStatus(enum.StrEnum):
     DRAFT = "draft"
     ACTIVE = "active"
     COMPLETED = "completed"
     ARCHIVED = "archived"
 
 
-class ItemType(str, enum.Enum):
+class ItemType(enum.StrEnum):
     LESSON = "lesson"
     QUIZ = "quiz"
     REVISION = "revision"
@@ -44,7 +46,7 @@ class LearningPath(Base, UUIDMixin, TimestampMixin):
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="learning_paths")
-    items: Mapped[List["LearningPathItem"]] = relationship(
+    items: Mapped[list["LearningPathItem"]] = relationship(
         "LearningPathItem",
         back_populates="learning_path",
         cascade="all, delete-orphan",
@@ -60,7 +62,7 @@ class LearningPath(Base, UUIDMixin, TimestampMixin):
         status: PathStatus = PathStatus.ACTIVE,
         total_days: int = 30,
         daily_minutes: int = 60,
-        id: Optional[str] = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)
@@ -132,7 +134,7 @@ class LearningPathItem(Base, UUIDMixin, TimestampMixin):
         item_type: ItemType = ItemType.LESSON,
         is_optional: bool = False,
         is_completed: bool = False,
-        id: Optional[str] = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)

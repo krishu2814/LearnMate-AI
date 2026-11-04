@@ -1,4 +1,5 @@
-from typing import Annotated, List, Optional
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,18 +21,18 @@ router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 
 @router.get(
     "",
-    response_model=List[QuizResponse],
+    response_model=list[QuizResponse],
     status_code=status.HTTP_200_OK,
     summary="List quizzes",
 )
 async def list_quizzes(
     db: Annotated[AsyncSession, Depends(get_db)],
-    topic: Optional[str] = Query(None, description="Filter by topic"),
-    difficulty: Optional[DifficultyLevel] = Query(None, description="Filter by difficulty level"),
-    lesson_id: Optional[str] = Query(None, description="Filter by lesson ID"),
+    topic: str | None = Query(None, description="Filter by topic"),
+    difficulty: DifficultyLevel | None = Query(None, description="Filter by difficulty level"),
+    lesson_id: str | None = Query(None, description="Filter by lesson ID"),
     skip: int = Query(0, ge=0, description="Pagination skip"),
     limit: int = Query(50, ge=1, le=100, description="Pagination limit"),
-) -> List[QuizResponse]:
+) -> list[QuizResponse]:
     """Retrieve catalog of available quizzes with optional filters."""
     service = QuizService(db)
     return await service.list_quizzes(

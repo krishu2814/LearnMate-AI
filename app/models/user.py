@@ -1,8 +1,10 @@
 import enum
 import uuid
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, Enum, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
     from app.models.progress import LessonProgress
 
 
-class SkillLevel(str, enum.Enum):
+class SkillLevel(enum.StrEnum):
     BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"
@@ -30,7 +32,7 @@ class User(Base, UUIDMixin, TimestampMixin):
         String(255),
         nullable=False,
     )
-    full_name: Mapped[Optional[str]] = mapped_column(
+    full_name: Mapped[str | None] = mapped_column(
         String(150),
         nullable=True,
     )
@@ -61,19 +63,19 @@ class User(Base, UUIDMixin, TimestampMixin):
     )
 
     # Relationships
-    refresh_tokens: Mapped[List["RefreshToken"]] = relationship(
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
         "RefreshToken",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin",
     )
-    learning_paths: Mapped[List["LearningPath"]] = relationship(
+    learning_paths: Mapped[list["LearningPath"]] = relationship(
         "LearningPath",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin",
     )
-    lesson_progress: Mapped[List["LessonProgress"]] = relationship(
+    lesson_progress: Mapped[list["LessonProgress"]] = relationship(
         "LessonProgress",
         back_populates="user",
         cascade="all, delete-orphan",
@@ -84,13 +86,13 @@ class User(Base, UUIDMixin, TimestampMixin):
         self,
         email: str,
         password_hash: str,
-        full_name: Optional[str] = None,
+        full_name: str | None = None,
         skill_level: SkillLevel = SkillLevel.BEGINNER,
         daily_study_minutes: int = 60,
         timezone: str = "UTC",
         is_active: bool = True,
         is_superuser: bool = False,
-        id: Optional[str] = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)

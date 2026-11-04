@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -45,7 +45,7 @@ class AuthService:
     async def login(
         self,
         data: LoginRequest,
-        device_info: Optional[str] = None,
+        device_info: str | None = None,
     ) -> TokenResponse:
         """Authenticate user credentials and issue access + refresh tokens."""
         user = await self.user_repo.get_by_email(data.email)
@@ -60,7 +60,7 @@ class AuthService:
     async def refresh_token(
         self,
         raw_refresh_token: str,
-        device_info: Optional[str] = None,
+        device_info: str | None = None,
     ) -> TokenResponse:
         """
         Rotate refresh token with automated token reuse detection.
@@ -108,10 +108,10 @@ class AuthService:
     async def _issue_token_pair(
         self,
         user_id: str,
-        device_info: Optional[str] = None,
+        device_info: str | None = None,
     ) -> TokenResponse:
         """Helper to issue a fresh JWT access token and save a hashed refresh token."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires_in_seconds = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
 
         access_token = create_access_token(

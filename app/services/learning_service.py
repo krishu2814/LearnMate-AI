@@ -1,4 +1,4 @@
-from typing import List, Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundException
@@ -29,9 +29,9 @@ class LearningService:
 
     async def get_courses(
         self,
-        difficulty: Optional[DifficultyLevel] = None,
-        subject_tag: Optional[str] = None,
-    ) -> List[CourseResponse]:
+        difficulty: DifficultyLevel | None = None,
+        subject_tag: str | None = None,
+    ) -> list[CourseResponse]:
         courses = await self.repo.get_courses(difficulty=difficulty, subject_tag=subject_tag)
         return [CourseResponse.model_validate(c) for c in courses]
 
@@ -92,7 +92,7 @@ class LearningService:
         user_id: str,
         skip: int = 0,
         limit: int = 20,
-    ) -> List[LearningPathResponse]:
+    ) -> list[LearningPathResponse]:
         paths = await self.repo.list_learning_paths(user_id=user_id, skip=skip, limit=limit)
         return [LearningPathResponse.model_validate(p) for p in paths]
 

@@ -1,8 +1,11 @@
-from typing import Any, Dict, Optional
+from typing import Any
+
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.core.logging import logger
 
 
 class AppException(Exception):
@@ -13,7 +16,7 @@ class AppException(Exception):
         message: str,
         code: str = "INTERNAL_ERROR",
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message)
         self.message = message
@@ -27,7 +30,7 @@ class AuthException(AppException):
         self,
         message: str = "Could not validate credentials",
         code: str = "INVALID_CREDENTIALS",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -52,7 +55,7 @@ class ForbiddenException(AppException):
         self,
         message: str = "You do not have permission to access this resource",
         code: str = "FORBIDDEN",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -67,7 +70,7 @@ class NotFoundException(AppException):
         self,
         message: str = "Resource not found",
         code: str = "NOT_FOUND",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -82,7 +85,7 @@ class BadRequestException(AppException):
         self,
         message: str = "Bad request",
         code: str = "BAD_REQUEST",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -97,7 +100,7 @@ class ConflictException(AppException):
         self,
         message: str = "Resource conflict occurred",
         code: str = "ALREADY_EXISTS",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -126,8 +129,8 @@ def build_error_response(
     status_code: int,
     code: str,
     message: str,
-    request_id: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    request_id: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> JSONResponse:
     """Standardized error envelope across the entire API."""
     content = {
@@ -184,6 +187,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     request_id = request.headers.get("X-Request-ID")
+    logger.error("unhandled_server_error", exc_info=exc, path=str(request.url), request_id=request_id)
     return build_error_response(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         code="INTERNAL_SERVER_ERROR",

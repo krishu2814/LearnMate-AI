@@ -1,8 +1,9 @@
-from typing import Optional
+
 import redis.asyncio as aioredis
+
 from app.core.config import settings
 
-_redis_pool: Optional[aioredis.ConnectionPool] = None
+_redis_pool: aioredis.ConnectionPool | None = None
 
 
 def get_redis_pool() -> aioredis.ConnectionPool:
@@ -27,7 +28,7 @@ async def check_redis_health() -> bool:
         client = get_redis_client()
         pong = await client.ping()
         return pong is True or pong == "PONG"
-    except Exception:
+    except Exception:  # noqa: BLE001
         return False
 
 

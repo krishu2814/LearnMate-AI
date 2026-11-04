@@ -6,6 +6,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sqlalchemy import select
+
 from app.db.session import AsyncSessionLocal, engine
 from app.models.course import Course, DifficultyLevel, Lesson, Module
 from app.models.quiz import QuestionType, Quiz, QuizQuestion
@@ -64,14 +65,14 @@ async def seed_quizzes_if_needed(session) -> None:
 
 async def seed_database() -> None:
     print("Seeding database with production courses and lessons...")
-    async with AsyncSessionLocal() as session:
-        # Check if already seeded
-        existing_course = await session.execute(select(Course).limit(1))
-        if existing_course.scalar_one_or_none():
-            print("Database already contains course catalog. Skipping duplicate seed.")
-            await seed_quizzes_if_needed(session)
-            await engine.dispose()
-            return
+    try:
+        async with AsyncSessionLocal() as session:
+            # Check if already seeded
+            existing_course = await session.execute(select(Course).limit(1))
+            if existing_course.scalar_one_or_none():
+                print("Database already contains course catalog. Skipping duplicate seed.")
+                await seed_quizzes_if_needed(session)
+                return
 
         # -------------------------------------------------------------
         # Course 1: Production Backend Engineering with Python & FastAPI
@@ -234,8 +235,9 @@ async def seed_database() -> None:
 
         await session.commit()
         await seed_quizzes_if_needed(session)
-        await engine.dispose()
         print("Database seeded successfully with 2 courses, 5 modules, and 11 lessons!")
+    finally:
+        await engine.dispose()
 
 
 if __name__ == "__main__":

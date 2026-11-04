@@ -1,4 +1,5 @@
-from typing import Annotated, List
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,7 +35,7 @@ async def create_learning_path(
 
 @router.get(
     "",
-    response_model=List[LearningPathResponse],
+    response_model=list[LearningPathResponse],
     status_code=status.HTTP_200_OK,
     summary="List learning paths for current user",
 )
@@ -43,7 +44,7 @@ async def list_learning_paths(
     db: Annotated[AsyncSession, Depends(get_db)],
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
-) -> List[LearningPathResponse]:
+) -> list[LearningPathResponse]:
     """Retrieve all learning paths owned by the authenticated user."""
     service = LearningService(db)
     return await service.list_learning_paths(user_id=current_user.id, skip=skip, limit=limit)

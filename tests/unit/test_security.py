@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +18,7 @@ from app.core.security import (
     verify_password,
 )
 from app.dependencies import get_current_active_superuser, get_current_user
-from app.models.user import SkillLevel, User
+from app.models.user import User
 
 
 def test_argon2_password_hashing():

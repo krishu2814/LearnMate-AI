@@ -1,13 +1,14 @@
 from datetime import datetime
-from typing import List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field
+
 from app.models.progress import ProgressStatus
 
 
 class LessonProgressUpdate(BaseModel):
     status: ProgressStatus = Field(default=ProgressStatus.COMPLETED)
-    time_spent_seconds: Optional[int] = Field(None, ge=0, description="Total seconds spent on lesson")
-    additional_seconds: Optional[int] = Field(0, ge=0, description="Seconds to add to cumulative time spent")
+    time_spent_seconds: int | None = Field(None, ge=0, description="Total seconds spent on lesson")
+    additional_seconds: int | None = Field(0, ge=0, description="Seconds to add to cumulative time spent")
 
 
 class LessonProgressResponse(BaseModel):
@@ -18,8 +19,8 @@ class LessonProgressResponse(BaseModel):
     lesson_id: str
     status: ProgressStatus
     time_spent_seconds: int
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -47,5 +48,5 @@ class DashboardProgressResponse(BaseModel):
     overall_completion_pct: float
     total_time_spent_seconds: int
     total_time_spent_minutes: int
-    courses_progress: List[CourseProgressSummary] = []
-    active_paths_progress: List[PathProgressSummary] = []
+    courses_progress: list[CourseProgressSummary] = []
+    active_paths_progress: list[PathProgressSummary] = []

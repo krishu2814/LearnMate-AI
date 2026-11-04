@@ -1,4 +1,4 @@
-from typing import Optional
+
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
 
     # AI Provider Settings
-    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_API_KEY: str | None = None
 
     @computed_field
     @property

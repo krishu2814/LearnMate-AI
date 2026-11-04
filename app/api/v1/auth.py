@@ -1,4 +1,5 @@
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, Header, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,7 +43,8 @@ async def login(
     user_agent: Annotated[str | None, Header()] = None,
 ) -> TokenResponse:
     auth_service = AuthService(db)
-    device_info = user_agent or request.client.host if request.client else "Unknown"
+    client_host = request.client.host if request.client else None
+    device_info = user_agent or client_host or "Unknown"
     return await auth_service.login(payload, device_info=device_info)
 
 
@@ -59,7 +61,8 @@ async def refresh_token(
     user_agent: Annotated[str | None, Header()] = None,
 ) -> TokenResponse:
     auth_service = AuthService(db)
-    device_info = user_agent or request.client.host if request.client else "Unknown"
+    client_host = request.client.host if request.client else None
+    device_info = user_agent or client_host or "Unknown"
     return await auth_service.refresh_token(payload.refresh_token, device_info=device_info)
 
 

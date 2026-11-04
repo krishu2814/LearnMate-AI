@@ -1,5 +1,6 @@
-from datetime import datetime, timezone
-from typing import List, Optional, Sequence
+from collections.abc import Sequence
+from datetime import UTC, datetime
+
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -15,8 +16,8 @@ class LearningRepository:
 
     async def get_courses(
         self,
-        difficulty: Optional[DifficultyLevel] = None,
-        subject_tag: Optional[str] = None,
+        difficulty: DifficultyLevel | None = None,
+        subject_tag: str | None = None,
     ) -> Sequence[Course]:
         stmt = select(Course).where(Course.is_published.is_(True))
         if difficulty:
@@ -28,7 +29,7 @@ class LearningRepository:
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
-    async def get_course_by_id(self, course_id: str) -> Optional[Course]:
+    async def get_course_by_id(self, course_id: str) -> Course | None:
         stmt = (
             select(Course)
             .where(Course.id == course_id, Course.is_published.is_(True))
@@ -39,12 +40,12 @@ class LearningRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_lesson_by_id(self, lesson_id: str) -> Optional[Lesson]:
+    async def get_lesson_by_id(self, lesson_id: str) -> Lesson | None:
         stmt = select(Lesson).where(Lesson.id == lesson_id)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_lessons_by_ids(self, lesson_ids: List[str]) -> Sequence[Lesson]:
+    async def get_lessons_by_ids(self, lesson_ids: list[str]) -> Sequence[Lesson]:
         if not lesson_ids:
             return []
         stmt = select(Lesson).where(Lesson.id.in_(lesson_ids))
@@ -95,7 +96,7 @@ class LearningRepository:
         self,
         path_id: str,
         user_id: str,
-    ) -> Optional[LearningPath]:
+    ) -> LearningPath | None:
         """
         CRITICAL OWNERSHIP PATTERN:
         Query ALWAYS enforces LearningPath.user_id == user_id.
@@ -154,7 +155,7 @@ class LearningRepository:
         self,
         user_id: str,
         lesson_id: str,
-    ) -> Optional[LessonProgress]:
+    ) -> LessonProgress | None:
         stmt = select(LessonProgress).where(
             LessonProgress.user_id == user_id,
             LessonProgress.lesson_id == lesson_id,
@@ -167,11 +168,11 @@ class LearningRepository:
         user_id: str,
         lesson_id: str,
         status: ProgressStatus = ProgressStatus.COMPLETED,
-        time_spent_seconds: Optional[int] = None,
+        time_spent_seconds: int | None = None,
         additional_seconds: int = 0,
     ) -> LessonProgress:
         progress = await self.get_lesson_progress(user_id=user_id, lesson_id=lesson_id)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         if progress:
             progress.status = status

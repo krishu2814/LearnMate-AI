@@ -1,17 +1,18 @@
-from typing import List, Optional, Sequence, Tuple
+from collections.abc import Sequence
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.course import DifficultyLevel
-from app.models.quiz import Quiz, QuizAnswer, QuizAttempt, QuizQuestion
+from app.models.quiz import Quiz, QuizAnswer, QuizAttempt
 
 
 class QuizRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_quiz_by_id(self, quiz_id: str) -> Optional[Quiz]:
+    async def get_quiz_by_id(self, quiz_id: str) -> Quiz | None:
         stmt = (
             select(Quiz)
             .where(Quiz.id == quiz_id)
@@ -22,9 +23,9 @@ class QuizRepository:
 
     async def list_quizzes(
         self,
-        topic: Optional[str] = None,
-        difficulty: Optional[DifficultyLevel] = None,
-        lesson_id: Optional[str] = None,
+        topic: str | None = None,
+        difficulty: DifficultyLevel | None = None,
+        lesson_id: str | None = None,
         skip: int = 0,
         limit: int = 50,
     ) -> Sequence[Quiz]:
@@ -50,7 +51,7 @@ class QuizRepository:
         await self.db.flush()
         return attempt
 
-    async def get_attempt_by_id(self, attempt_id: str, user_id: str) -> Optional[QuizAttempt]:
+    async def get_attempt_by_id(self, attempt_id: str, user_id: str) -> QuizAttempt | None:
         stmt = (
             select(QuizAttempt)
             .where(QuizAttempt.id == attempt_id, QuizAttempt.user_id == user_id)
@@ -67,7 +68,7 @@ class QuizRepository:
         user_id: str,
         skip: int = 0,
         limit: int = 20,
-    ) -> Tuple[Sequence[QuizAttempt], int]:
+    ) -> tuple[Sequence[QuizAttempt], int]:
         count_stmt = (
             select(func.count(QuizAttempt.id))
             .where(QuizAttempt.quiz_id == quiz_id, QuizAttempt.user_id == user_id)
@@ -89,7 +90,7 @@ class QuizRepository:
         user_id: str,
         skip: int = 0,
         limit: int = 20,
-    ) -> Tuple[Sequence[QuizAttempt], int]:
+    ) -> tuple[Sequence[QuizAttempt], int]:
         count_stmt = (
             select(func.count(QuizAttempt.id))
             .where(QuizAttempt.user_id == user_id)

@@ -1,9 +1,11 @@
 import enum
 import uuid
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
+
 from sqlalchemy import DateTime, Enum, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
-class ProgressStatus(str, enum.Enum):
+class ProgressStatus(enum.StrEnum):
     NOT_STARTED = "not_started"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -43,11 +45,11 @@ class LessonProgress(Base, UUIDMixin, TimestampMixin):
         default=0,
         nullable=False,
     )
-    started_at: Mapped[Optional[datetime]] = mapped_column(
+    started_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
-    completed_at: Mapped[Optional[datetime]] = mapped_column(
+    completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
@@ -62,9 +64,9 @@ class LessonProgress(Base, UUIDMixin, TimestampMixin):
         lesson_id: str,
         status: ProgressStatus = ProgressStatus.NOT_STARTED,
         time_spent_seconds: int = 0,
-        started_at: Optional[datetime] = None,
-        completed_at: Optional[datetime] = None,
-        id: Optional[str] = None,
+        started_at: datetime | None = None,
+        completed_at: datetime | None = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)
@@ -77,11 +79,11 @@ class LessonProgress(Base, UUIDMixin, TimestampMixin):
 
     def mark_started(self) -> None:
         if not self.started_at:
-            self.started_at = datetime.now(timezone.utc)
+            self.started_at = datetime.now(UTC)
         self.status = ProgressStatus.IN_PROGRESS
 
     def mark_completed(self, additional_seconds: int = 0) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if not self.started_at:
             self.started_at = now
         self.completed_at = now

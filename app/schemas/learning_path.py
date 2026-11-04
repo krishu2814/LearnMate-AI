@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field
+
 from app.models.learning_path import ItemType, PathStatus
 
 
@@ -30,15 +31,15 @@ class LearningPathCreate(BaseModel):
     goal: str
     total_days: int = Field(default=30, ge=1, le=365)
     daily_minutes: int = Field(default=60, ge=15, le=480)
-    lesson_ids: List[str] = Field(default=[], description="Ordered list of lesson IDs to include")
+    lesson_ids: list[str] = Field(default=[], description="Ordered list of lesson IDs to include")
 
 
 class LearningPathUpdate(BaseModel):
-    title: Optional[str] = Field(None, max_length=200)
-    goal: Optional[str] = None
-    status: Optional[PathStatus] = None
-    total_days: Optional[int] = Field(None, ge=1, le=365)
-    daily_minutes: Optional[int] = Field(None, ge=15, le=480)
+    title: str | None = Field(None, max_length=200)
+    goal: str | None = None
+    status: PathStatus | None = None
+    total_days: int | None = Field(None, ge=1, le=365)
+    daily_minutes: int | None = Field(None, ge=15, le=480)
 
 
 class LearningPathResponse(BaseModel):
@@ -58,4 +59,4 @@ class LearningPathResponse(BaseModel):
 
 
 class LearningPathDetailResponse(LearningPathResponse):
-    items: List[LearningPathItemResponse] = []
+    items: list[LearningPathItemResponse] = []

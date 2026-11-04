@@ -1,9 +1,11 @@
 import enum
 import uuid
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List, Optional
-from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, JSON, String, Text
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Optional
+
+from sqlalchemy import JSON, Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base, TimestampMixin, UUIDMixin
 from app.models.course import DifficultyLevel
 
@@ -12,7 +14,7 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
-class QuestionType(str, enum.Enum):
+class QuestionType(enum.StrEnum):
     MCQ = "mcq"
     TRUE_FALSE = "true_false"
     SHORT_ANSWER = "short_answer"
@@ -28,30 +30,30 @@ class Quiz(Base, UUIDMixin, TimestampMixin):
         default=DifficultyLevel.BEGINNER,
         nullable=False,
     )
-    user_id: Mapped[Optional[str]] = mapped_column(
+    user_id: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("users.id", ondelete="CASCADE"),
         index=True,
         nullable=True,
     )
-    lesson_id: Mapped[Optional[str]] = mapped_column(
+    lesson_id: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("lessons.id", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
     question_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    prompt_version: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    prompt_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Relationships
-    questions: Mapped[List["QuizQuestion"]] = relationship(
+    questions: Mapped[list["QuizQuestion"]] = relationship(
         "QuizQuestion",
         back_populates="quiz",
         cascade="all, delete-orphan",
         order_by="QuizQuestion.position",
         lazy="selectin",
     )
-    attempts: Mapped[List["QuizAttempt"]] = relationship(
+    attempts: Mapped[list["QuizAttempt"]] = relationship(
         "QuizAttempt",
         back_populates="quiz",
         cascade="all, delete-orphan",
@@ -66,11 +68,11 @@ class Quiz(Base, UUIDMixin, TimestampMixin):
         title: str,
         topic: str,
         difficulty: DifficultyLevel = DifficultyLevel.BEGINNER,
-        user_id: Optional[str] = None,
-        lesson_id: Optional[str] = None,
+        user_id: str | None = None,
+        lesson_id: str | None = None,
         question_count: int = 0,
-        prompt_version: Optional[str] = None,
-        id: Optional[str] = None,
+        prompt_version: str | None = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)
@@ -98,10 +100,10 @@ class QuizQuestion(Base, UUIDMixin, TimestampMixin):
         default=QuestionType.MCQ,
         nullable=False,
     )
-    options: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True)
+    options: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     correct_answer: Mapped[str] = mapped_column(Text, nullable=False)
-    explanation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    topic_tag: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    topic_tag: Mapped[str | None] = mapped_column(String(100), nullable=True)
     position: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
 
     # Relationships
@@ -113,11 +115,11 @@ class QuizQuestion(Base, UUIDMixin, TimestampMixin):
         question: str,
         correct_answer: str,
         question_type: QuestionType = QuestionType.MCQ,
-        options: Optional[List[str]] = None,
-        explanation: Optional[str] = None,
-        topic_tag: Optional[str] = None,
+        options: list[str] | None = None,
+        explanation: str | None = None,
+        topic_tag: str | None = None,
         position: int = 1,
-        id: Optional[str] = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)
@@ -153,13 +155,13 @@ class QuizAttempt(Base, UUIDMixin, TimestampMixin):
     is_exam_mode: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     submitted_at: Mapped[datetime] = mapped_column(
         DateTime,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )
 
     # Relationships
     quiz: Mapped["Quiz"] = relationship("Quiz", back_populates="attempts")
-    answers: Mapped[List["QuizAnswer"]] = relationship(
+    answers: Mapped[list["QuizAnswer"]] = relationship(
         "QuizAnswer",
         back_populates="attempt",
         cascade="all, delete-orphan",
@@ -176,8 +178,8 @@ class QuizAttempt(Base, UUIDMixin, TimestampMixin):
         correct_count: int = 0,
         time_seconds: int = 0,
         is_exam_mode: bool = False,
-        submitted_at: Optional[datetime] = None,
-        id: Optional[str] = None,
+        submitted_at: datetime | None = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)
@@ -188,7 +190,7 @@ class QuizAttempt(Base, UUIDMixin, TimestampMixin):
         self.correct_count = correct_count
         self.time_seconds = time_seconds
         self.is_exam_mode = is_exam_mode
-        self.submitted_at = submitted_at or datetime.now(timezone.utc)
+        self.submitted_at = submitted_at or datetime.now(UTC)
 
 
 class QuizAnswer(Base, UUIDMixin, TimestampMixin):
@@ -208,8 +210,8 @@ class QuizAnswer(Base, UUIDMixin, TimestampMixin):
     )
     user_answer: Mapped[str] = mapped_column(Text, nullable=False)
     is_correct: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    ai_confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    ai_feedback: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ai_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ai_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     attempt: Mapped["QuizAttempt"] = relationship("QuizAttempt", back_populates="answers")
@@ -221,9 +223,9 @@ class QuizAnswer(Base, UUIDMixin, TimestampMixin):
         question_id: str,
         user_answer: str,
         is_correct: bool = False,
-        ai_confidence: Optional[float] = None,
-        ai_feedback: Optional[str] = None,
-        id: Optional[str] = None,
+        ai_confidence: float | None = None,
+        ai_feedback: str | None = None,
+        id: str | None = None,
         **kwargs,
     ):
         super().__init__(id=id or str(uuid.uuid4()), **kwargs)

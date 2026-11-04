@@ -1,7 +1,9 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.auth import RefreshToken
 from app.models.user import SkillLevel, User
 
@@ -22,8 +24,8 @@ def test_user_model_defaults():
 
 
 def test_refresh_token_active_and_revocation():
-    future = datetime.now(timezone.utc) + timedelta(days=7)
-    past = datetime.now(timezone.utc) - timedelta(days=1)
+    future = datetime.now(UTC) + timedelta(days=7)
+    past = datetime.now(UTC) - timedelta(days=1)
 
     active_token = RefreshToken(
         user_id="user-123",
@@ -59,7 +61,7 @@ async def test_user_and_refresh_token_db_relationship(db_session: AsyncSession):
     token = RefreshToken(
         user_id=user.id,
         token_hash=f"hash_{datetime.now().timestamp()}",
-        expires_at=datetime.now(timezone.utc) + timedelta(days=30),
+        expires_at=datetime.now(UTC) + timedelta(days=30),
         device_info="Chrome / macOS",
     )
     db_session.add(token)

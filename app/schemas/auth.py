@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.user import SkillLevel
@@ -8,7 +8,7 @@ from app.models.user import SkillLevel
 class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, description="Password with minimum 8 characters")
-    full_name: Optional[str] = Field(None, max_length=150)
+    full_name: str | None = Field(None, max_length=150)
     skill_level: SkillLevel = SkillLevel.BEGINNER
     daily_study_minutes: int = Field(default=60, ge=15, le=480)
     timezone: str = Field(default="UTC", max_length=50)
@@ -35,7 +35,7 @@ class UserResponse(BaseModel):
 
     id: str
     email: str
-    full_name: Optional[str] = None
+    full_name: str | None = None
     skill_level: SkillLevel
     daily_study_minutes: int
     timezone: str

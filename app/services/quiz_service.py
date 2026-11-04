@@ -1,4 +1,4 @@
-from typing import List, Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BadRequestException, NotFoundException
@@ -24,12 +24,12 @@ class QuizService:
 
     async def list_quizzes(
         self,
-        topic: Optional[str] = None,
-        difficulty: Optional[DifficultyLevel] = None,
-        lesson_id: Optional[str] = None,
+        topic: str | None = None,
+        difficulty: DifficultyLevel | None = None,
+        lesson_id: str | None = None,
         skip: int = 0,
         limit: int = 50,
-    ) -> List[QuizResponse]:
+    ) -> list[QuizResponse]:
         quizzes = await self.repo.list_quizzes(
             topic=topic,
             difficulty=difficulty,
@@ -86,8 +86,8 @@ class QuizService:
         submitted_answers_map = {ans.question_id: ans.user_answer for ans in payload.answers}
         total_questions = len(quiz.questions)
         correct_count = 0
-        answer_entities: List[QuizAnswer] = []
-        answer_results: List[QuizAnswerResultResponse] = []
+        answer_entities: list[QuizAnswer] = []
+        answer_results: list[QuizAnswerResultResponse] = []
 
         for q in sorted(quiz.questions, key=lambda x: x.position):
             user_ans = submitted_answers_map.get(q.id, "")

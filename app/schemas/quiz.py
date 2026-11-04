@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field
+
 from app.models.course import DifficultyLevel
 from app.models.quiz import QuestionType
 
@@ -11,14 +12,14 @@ class QuizQuestionResponse(BaseModel):
     id: str
     question: str
     question_type: QuestionType
-    options: Optional[List[str]] = None
+    options: list[str] | None = None
     position: int
-    topic_tag: Optional[str] = None
+    topic_tag: str | None = None
 
 
 class QuizQuestionDetailResponse(QuizQuestionResponse):
     correct_answer: str
-    explanation: Optional[str] = None
+    explanation: str | None = None
 
 
 class QuizResponse(BaseModel):
@@ -29,12 +30,12 @@ class QuizResponse(BaseModel):
     topic: str
     difficulty: DifficultyLevel
     question_count: int
-    lesson_id: Optional[str] = None
+    lesson_id: str | None = None
     created_at: datetime
 
 
 class QuizDetailResponse(QuizResponse):
-    questions: List[QuizQuestionResponse] = Field(default_factory=list)
+    questions: list[QuizQuestionResponse] = Field(default_factory=list)
 
 
 class QuizAnswerSubmit(BaseModel):
@@ -43,7 +44,7 @@ class QuizAnswerSubmit(BaseModel):
 
 
 class QuizAttemptCreate(BaseModel):
-    answers: List[QuizAnswerSubmit] = Field(..., min_length=1, description="List of submitted answers")
+    answers: list[QuizAnswerSubmit] = Field(..., min_length=1, description="List of submitted answers")
     time_seconds: int = Field(default=0, ge=0, description="Duration in seconds taken for the attempt")
     is_exam_mode: bool = Field(default=False, description="Whether the attempt was taken under exam conditions")
 
@@ -55,9 +56,9 @@ class QuizAnswerResultResponse(BaseModel):
     user_answer: str
     is_correct: bool
     correct_answer: str
-    explanation: Optional[str] = None
-    ai_confidence: Optional[float] = None
-    ai_feedback: Optional[str] = None
+    explanation: str | None = None
+    ai_confidence: float | None = None
+    ai_feedback: str | None = None
 
 
 class QuizAttemptResponse(BaseModel):
@@ -72,7 +73,7 @@ class QuizAttemptResponse(BaseModel):
     time_seconds: int
     is_exam_mode: bool
     submitted_at: datetime
-    answers: List[QuizAnswerResultResponse] = Field(default_factory=list)
+    answers: list[QuizAnswerResultResponse] = Field(default_factory=list)
 
 
 class QuizAttemptSummaryResponse(BaseModel):
@@ -92,4 +93,4 @@ class PaginatedQuizAttemptsResponse(BaseModel):
     total: int
     page: int
     per_page: int
-    items: List[QuizAttemptSummaryResponse]
+    items: list[QuizAttemptSummaryResponse]

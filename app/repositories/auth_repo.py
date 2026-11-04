@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +15,7 @@ class AuthRepository:
         user_id: str,
         token_hash: str,
         expires_at: datetime,
-        device_info: Optional[str] = None,
+        device_info: str | None = None,
     ) -> RefreshToken:
         token = RefreshToken(
             user_id=user_id,
@@ -27,7 +27,7 @@ class AuthRepository:
         await self.db.flush()
         return token
 
-    async def get_by_token_hash(self, token_hash: str) -> Optional[RefreshToken]:
+    async def get_by_token_hash(self, token_hash: str) -> RefreshToken | None:
         stmt = select(RefreshToken).where(RefreshToken.token_hash == token_hash)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -41,7 +41,7 @@ class AuthRepository:
         Token Reuse Detection: Revoke all active tokens for a compromised user account.
         Returns the number of tokens updated.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         stmt = (
             update(RefreshToken)
             .where(
@@ -52,4 +52,4 @@ class AuthRepository:
         )
         result = await self.db.execute(stmt)
         await self.db.flush()
-        return result.rowcount
+        return int(getattr(result, "rowcount", 0))
