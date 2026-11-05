@@ -1,7 +1,14 @@
+import enum
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.course import DifficultyLevel
 from app.models.quiz import QuestionType
+from app.schemas.learning_path import LearningPathDetailResponse
+
+# ============================================================================
+# Quiz Generation & Evaluation Schemas
+# ============================================================================
 
 
 class AIGeneratedQuestion(BaseModel):
@@ -16,7 +23,9 @@ class AIGeneratedQuestion(BaseModel):
         description="List of 3 to 5 options for MCQ; ['True', 'False'] for TRUE_FALSE",
     )
     correct_answer: str = Field(..., description="The exact correct option string")
-    explanation: str = Field(..., description="Educational explanation for why the answer is correct")
+    explanation: str = Field(
+        ..., description="Educational explanation for why the answer is correct"
+    )
     topic_tag: str | None = Field(default=None, description="Subtopic tag or concept name")
 
 
@@ -67,7 +76,9 @@ class AIEvalResult(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
-    is_correct: bool = Field(..., description="Whether the student's answer is accurate and correct")
+    is_correct: bool = Field(
+        ..., description="Whether the student's answer is accurate and correct"
+    )
     confidence: float = Field(
         ...,
         ge=0.0,
@@ -99,3 +110,167 @@ class AIEvaluateAnswerResponse(BaseModel):
     is_correct: bool
     ai_confidence: float
     ai_feedback: str
+
+
+# ============================================================================
+# Personalized Curriculum / Learning Path Generation Schemas
+# ============================================================================
+
+
+class AIGeneratedCurriculumPayload(BaseModel):
+    """Gemini structured output payload for an AI personalized curriculum."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    title: str = Field(..., max_length=200, description="Inspiring, tailored roadmap title")
+    overview: str = Field(..., description="Pedagogical rationale and learning strategy")
+    weekly_milestones: list[str] = Field(
+        ..., min_length=1, description="Sequential weekly milestones"
+    )
+    selected_lesson_ids: list[str] = Field(
+        ..., description="Ordered list of lesson IDs chosen from catalog"
+    )
+    study_tips: list[str] = Field(..., description="Actionable study habits and tips")
+
+
+class AILearningPathGenerateRequest(BaseModel):
+    """User request payload to generate an adaptive learning roadmap."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    goal: str = Field(
+        ...,
+        min_length=3,
+        max_length=300,
+        description="Learner's objective (e.g. 'Master Backend Async Architecture')",
+    )
+    difficulty: DifficultyLevel = Field(
+        default=DifficultyLevel.INTERMEDIATE,
+        description="Current learner skill level",
+    )
+    total_days: int = Field(default=30, ge=1, le=365, description="Planned total days to study")
+    daily_minutes: int = Field(
+        default=60, ge=15, le=480, description="Available study minutes per day"
+    )
+    custom_focus: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Specific topics or subfields to prioritize",
+    )
+
+
+class AILearningPathGenerateResponse(BaseModel):
+    """Response returned when an AI learning path has been planned and persisted."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    learning_path: LearningPathDetailResponse
+    ai_overview: str
+    weekly_milestones: list[str]
+    study_tips: list[str]
+
+
+# ============================================================================
+# Socratic Explainer & In-Lesson Tutor Schemas
+# ============================================================================
+
+
+class AIExplanationStyle(enum.StrEnum):
+    BEGINNER = "beginner"
+    DEEP_DIVE = "deep_dive"
+    ANALOGY = "analogy"
+    PRACTICAL = "practical"
+
+
+class AILessonExplainRequest(BaseModel):
+    """Request payload for generating an explanation of a lesson."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    lesson_id: str | None = Field(
+        default=None,
+        description="The ID of the lesson to explain (inferred from path parameter if omitted)",
+    )
+    style: AIExplanationStyle = Field(
+        default=AIExplanationStyle.DEEP_DIVE,
+        description="Desired explanation pedagogical style",
+    )
+    focus_question: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Optional student question or specific concept to focus on",
+    )
+
+
+class AILessonExplanationPayload(BaseModel):
+    """Gemini structured output payload for a lesson explanation."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    explanation: str = Field(..., description="Comprehensive explanation in requested style")
+    key_takeaways: list[str] = Field(..., min_length=1, description="3-5 core takeaways")
+    code_example: str | None = Field(
+        default=None, description="Illustrative code example if relevant"
+    )
+    suggested_followups: list[str] = Field(..., description="2-3 follow-up exploration questions")
+
+
+class AILessonExplainResponse(BaseModel):
+    """Response payload for a lesson explanation."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    lesson_id: str
+    lesson_title: str
+    style: AIExplanationStyle
+    explanation: str
+    key_takeaways: list[str]
+    code_example: str | None = None
+    suggested_followups: list[str] = []
+
+
+class AITutorChatMessage(BaseModel):
+    """A message in the Socratic tutor conversation history."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    role: str = Field(..., pattern="^(user|assistant)$", description="Role: 'user' or 'assistant'")
+    content: str = Field(..., min_length=1, max_length=2000, description="Message text")
+
+
+class AITutorChatRequest(BaseModel):
+    """Request payload for an interactive chat with the AI Socratic Tutor."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    message: str = Field(
+        ..., min_length=1, max_length=2000, description="Student's message or question"
+    )
+    lesson_id: str | None = Field(
+        default=None, description="Optional lesson ID for grounded context"
+    )
+    history: list[AITutorChatMessage] = Field(
+        default=[],
+        description="Recent conversation history for conversational continuity",
+    )
+
+
+class AITutorChatPayload(BaseModel):
+    """Gemini structured output payload for a Socratic tutor response."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    reply: str = Field(..., description="Helpful, Socratic response guiding the student")
+    socratic_question: str | None = Field(
+        default=None,
+        description="Thought-provoking question checking the student's understanding",
+    )
+    suggested_topics: list[str] = Field(default=[], description="Related topics to explore next")
+
+
+class AITutorChatResponse(BaseModel):
+    """Response payload returned by the AI Socratic Tutor."""
+
+    reply: str
+    socratic_question: str | None = None
+    suggested_topics: list[str] = []
