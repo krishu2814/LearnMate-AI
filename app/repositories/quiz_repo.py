@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.course import DifficultyLevel
-from app.models.quiz import Quiz, QuizAnswer, QuizAttempt
+from app.models.quiz import Quiz, QuizAnswer, QuizAttempt, QuizQuestion
 
 
 class QuizRepository:
@@ -18,6 +18,11 @@ class QuizRepository:
             .where(Quiz.id == quiz_id)
             .options(selectinload(Quiz.questions))
         )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_question_by_id(self, question_id: str) -> QuizQuestion | None:
+        stmt = select(QuizQuestion).where(QuizQuestion.id == question_id)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 

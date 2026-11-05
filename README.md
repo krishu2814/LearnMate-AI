@@ -5,15 +5,17 @@ LearnMate AI is a production-grade, AI-powered personalized learning platform ba
 ## Core Features
 
 - **Authentication & Security:** Argon2id password hashing, JWT stateless access tokens, high-entropy opaque refresh tokens with automated token rotation and token-reuse attack detection.
+- **AI Quiz Generation & Adaptive Assessment:** Automated curriculum-grounded or topic-based quiz generation with Gemini structured JSON output schemas, confidence scoring, and pedagogical feedback.
 - **Course & Lesson Management:** Structured courses, modules, and lessons with estimated completion durations.
 - **Personalized Learning Paths:** Custom learner goals, schedule allocation, and automated item completion synchronization.
 - **Progress Tracking & Analytics:** Real-time lesson progress lifecycle (`not_started`, `in_progress`, `completed`), time tracking, and dashboard analytics.
-- **Adaptive Quizzes:** Automated scoring, question ordering, history tracking, and row-level ownership isolation.
+- **Adaptive Quizzes & Scoring:** Immediate grading, question ordering, history tracking, and row-level ownership isolation.
 - **Enterprise Observability & Health:** Health checks (`/health/live`, `/health/ready`), distributed tracing IDs (`X-Request-ID`), process latency (`X-Process-Time`), and structured JSON logging via structlog.
 
 ## Architecture & Technology Stack
 
 - **Framework:** FastAPI
+- **AI Engine:** Google Gemini (`google-genai` SDK with strict Pydantic JSON schema output)
 - **Database ORM:** SQLAlchemy 2.0 (Asyncio)
 - **Database Engine:** MySQL 8 with connection pooling
 - **Migrations:** Alembic

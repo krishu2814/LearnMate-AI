@@ -27,6 +27,17 @@ async def get_auth_headers(client: AsyncClient, email: str, password: str = "Pas
     return {"Authorization": f"Bearer {token}"}
 
 
+async def get_seeded_quiz(client: AsyncClient) -> dict:
+    """Fetch the specific seeded quiz for attempt tests."""
+    list_resp = await client.get("/api/v1/quizzes")
+    for q in list_resp.json():
+        if q.get("title") == "Python Concurrency & Async Architecture Quiz":
+            detail = await client.get(f"/api/v1/quizzes/{q['id']}")
+            return detail.json()
+    first_id = list_resp.json()[0]["id"]
+    return (await client.get(f"/api/v1/quizzes/{first_id}")).json()
+
+
 @pytest.mark.asyncio
 async def test_list_quizzes(client: AsyncClient):
     resp = await client.get("/api/v1/quizzes")
@@ -92,9 +103,8 @@ async def test_submit_quiz_attempt_scoring(client: AsyncClient):
     email = random_email()
     headers = await get_auth_headers(client, email)
 
-    list_resp = await client.get("/api/v1/quizzes")
-    quiz_id = list_resp.json()[0]["id"]
-    quiz_detail = (await client.get(f"/api/v1/quizzes/{quiz_id}")).json()
+    quiz_detail = await get_seeded_quiz(client)
+    quiz_id = quiz_detail["id"]
     questions = quiz_detail["questions"]
     assert len(questions) == 3
 
@@ -142,9 +152,8 @@ async def test_submit_quiz_attempt_perfect_score(client: AsyncClient):
     email = random_email()
     headers = await get_auth_headers(client, email)
 
-    list_resp = await client.get("/api/v1/quizzes")
-    quiz_id = list_resp.json()[0]["id"]
-    quiz_detail = (await client.get(f"/api/v1/quizzes/{quiz_id}")).json()
+    quiz_detail = await get_seeded_quiz(client)
+    quiz_id = quiz_detail["id"]
     questions = quiz_detail["questions"]
 
     payload = {
@@ -222,9 +231,8 @@ async def test_quiz_attempt_history_and_user_isolation(client: AsyncClient):
     user_b_email = random_email()
     headers_b = await get_auth_headers(client, user_b_email)
 
-    list_resp = await client.get("/api/v1/quizzes")
-    quiz_id = list_resp.json()[0]["id"]
-    quiz_detail = (await client.get(f"/api/v1/quizzes/{quiz_id}")).json()
+    quiz_detail = await get_seeded_quiz(client)
+    quiz_id = quiz_detail["id"]
     questions = quiz_detail["questions"]
 
     # User A submits 2 attempts

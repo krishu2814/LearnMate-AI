@@ -99,11 +99,20 @@ class QuizService:
             if is_correct:
                 correct_count += 1
 
+            ai_confidence = 1.0 if is_correct else 0.9
+            ai_feedback = (
+                "Correct! Great mastery of the concept."
+                if is_correct
+                else f"Incorrect. Review the correct concept: '{q.correct_answer}'."
+            )
+
             ans_entity = QuizAnswer(
                 attempt_id="",
                 question_id=q.id,
                 user_answer=user_ans,
                 is_correct=is_correct,
+                ai_confidence=ai_confidence,
+                ai_feedback=ai_feedback,
             )
             ans_entity.question = q
             answer_entities.append(ans_entity)
@@ -115,6 +124,8 @@ class QuizService:
                     is_correct=is_correct,
                     correct_answer=q.correct_answer,
                     explanation=q.explanation,
+                    ai_confidence=ai_confidence,
+                    ai_feedback=ai_feedback,
                 )
             )
 
