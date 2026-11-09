@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from app.models.auth import RefreshToken
     from app.models.learning_path import LearningPath
     from app.models.progress import LessonProgress
+    from app.models.srs import ReviewItem
 
 
 class SkillLevel(enum.StrEnum):
@@ -77,6 +78,12 @@ class User(Base, UUIDMixin, TimestampMixin):
     )
     lesson_progress: Mapped[list["LessonProgress"]] = relationship(
         "LessonProgress",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    review_items: Mapped[list["ReviewItem"]] = relationship(
+        "ReviewItem",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin",

@@ -1,10 +1,10 @@
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BadRequestException, NotFoundException
 from app.models.course import DifficultyLevel
 from app.models.quiz import QuizAnswer, QuizAttempt
 from app.repositories.quiz_repo import QuizRepository
+from app.repositories.srs_repo import SRSRepository
 from app.schemas.quiz import (
     PaginatedQuizAttemptsResponse,
     QuizAnswerResultResponse,
@@ -21,6 +21,7 @@ class QuizService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = QuizRepository(db)
+        self.srs_repo = SRSRepository(db)
 
     async def list_quizzes(
         self,
@@ -77,9 +78,13 @@ class QuizService:
 
         for ans in payload.answers:
             if ans.question_id not in question_map:
-                raise BadRequestException(f"Question '{ans.question_id}' does not belong to quiz '{quiz_id}'")
+                raise BadRequestException(
+                    f"Question '{ans.question_id}' does not belong to quiz '{quiz_id}'"
+                )
             if ans.question_id in seen_question_ids:
-                raise BadRequestException(f"Duplicate answer submitted for question '{ans.question_id}'")
+                raise BadRequestException(
+                    f"Duplicate answer submitted for question '{ans.question_id}'"
+                )
             seen_question_ids.add(ans.question_id)
 
         # Grade submitted answers
@@ -92,12 +97,16 @@ class QuizService:
         for q in sorted(quiz.questions, key=lambda x: x.position):
             user_ans = submitted_answers_map.get(q.id, "")
             is_correct = (
-                user_ans.strip().lower() == q.correct_answer.strip().lower()
-                if user_ans
-                else False
+                user_ans.strip().lower() == q.correct_answer.strip().lower() if user_ans else False
             )
             if is_correct:
                 correct_count += 1
+            else:
+                await self.srs_repo.upsert_quiz_mistake(
+                    user_id=user_id,
+                    question_id=q.id,
+                    topic_tag=q.topic_tag or quiz.topic,
+                )
 
             ai_confidence = 1.0 if is_correct else 0.9
             ai_feedback = (

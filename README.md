@@ -5,6 +5,7 @@ LearnMate AI is a production-grade, AI-powered personalized learning platform ba
 ## Core Features
 
 - **Authentication & Security:** Argon2id password hashing, JWT stateless access tokens, high-entropy opaque refresh tokens with automated token rotation and token-reuse attack detection.
+- **Adaptive Spaced Repetition (SRS) & Weakness Remediation:** SuperMemo SM-2 spaced repetition engine that automatically schedules questions missed in quizzes for spaced review, tracks topic weaknesses, and synthesizes targeted AI remediation assessments with Gemini.
 - **AI Curriculum & Study Roadmap Generator:** Automatically synthesizes learner goals, target timelines, and daily study budgets into structured, multi-week learning paths grounded in catalog courses with milestone tracking and prior progress credit.
 - **Socratic AI Tutor & Multi-Style Lesson Explainer:** Context-aware tutoring with multi-style pedagogical explanations (`beginner`/ELI5, `deep_dive`, `analogy`, `practical`) and interactive Socratic mentorship with conversational continuity.
 - **AI Quiz Generation & Adaptive Assessment:** Automated curriculum-grounded or topic-based quiz generation with Gemini structured JSON output schemas, confidence scoring, and pedagogical feedback.
@@ -26,6 +27,11 @@ LearnMate AI is a production-grade, AI-powered personalized learning platform ba
 - **Testing:** Pytest & Pytest-Asyncio
 
 ## API Overview
+
+### Spaced Repetition & Weakness Remediation (`/api/v1/srs`)
+- `GET /api/v1/srs/queue` - Retrieve questions due for review based on SM-2 intervals, with weak-topic analytics.
+- `POST /api/v1/srs/items/{item_id}/review` - Submit a review answer, updating repetitions, ease factor, and next review date.
+- `POST /api/v1/srs/remediation/generate-quiz` - Generate a targeted AI refresher quiz focusing on the student's specific misconceptions.
 
 ### AI Assessment & Learning (`/api/v1/ai`)
 - `POST /api/v1/ai/learning-paths/generate` - Generate and persist a personalized learning roadmap with weekly milestones.
