@@ -76,3 +76,4 @@ def build_socratic_tutor_prompt(
         "3. 'suggested_topics': 2-3 related topics the student might explore next.\n"
     )
     return prompt
+
