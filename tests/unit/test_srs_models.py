@@ -25,3 +25,4 @@ def test_review_item_defaults():
     assert item.total_reviews == 0
     assert item.next_review_at >= now
     assert "interval=1d" in repr(item)
+
