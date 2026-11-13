@@ -92,6 +92,12 @@ class SRSService:
         await self.srs_repo.record_review_result(item=item, is_correct=is_correct)
         await self.db.commit()
 
+        # Gamification: award XP for spaced repetition review
+        review_xp = 15 if is_correct else 5
+        from app.services.gamification_service import GamificationService
+
+        await GamificationService(self.db).award_xp(user_id=user_id, amount=review_xp)
+
         logger.info(
             "srs_review_recorded",
             user_id=user_id,

@@ -150,6 +150,9 @@ class LearningService:
 
         if payload.status == ProgressStatus.COMPLETED:
             await self.repo.sync_learning_path_items_completed(user_id=user_id, lesson_id=lesson_id)
+            from app.services.gamification_service import GamificationService
+
+            await GamificationService(self.db).award_xp(user_id=user_id, amount=25)
 
         await self.db.commit()
         await self.db.refresh(progress)

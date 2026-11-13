@@ -81,6 +81,13 @@ class CodeService:
         )
 
         await self.code_repo.create_submission(submission)
+
+        # Gamification: award XP for code review submission and passing quality
+        code_xp = 35 if submission.is_passed else 15
+        from app.services.gamification_service import GamificationService
+
+        await GamificationService(self.db).award_xp(user_id=user_id, amount=code_xp)
+
         await self.db.commit()
 
         logger.info(

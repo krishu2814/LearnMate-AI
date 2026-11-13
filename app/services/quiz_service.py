@@ -155,6 +155,13 @@ class QuizService:
             attempt.answers.append(ans_entity)
 
         await self.repo.create_attempt(attempt)
+
+        # Gamification: award XP based on quiz completion and performance
+        earned_xp = 15 + int((score / 100.0) * 20)
+        from app.services.gamification_service import GamificationService
+
+        await GamificationService(self.db).award_xp(user_id=user_id, amount=earned_xp)
+
         await self.db.commit()
 
         return QuizAttemptResponse(

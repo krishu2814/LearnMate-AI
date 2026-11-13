@@ -5,6 +5,7 @@ LearnMate AI is a production-grade, AI-powered personalized learning platform ba
 ## Core Features
 
 - **Authentication & Security:** Argon2id password hashing, JWT stateless access tokens, high-entropy opaque refresh tokens with automated token rotation and token-reuse attack detection.
+- **Gamification, Streaks & Achievements:** RPG leveling progression with quadratic XP scaling, daily active study streaks with longest streak preservation, automated milestone badge awards, real-time action hooks, and global learner leaderboards.
 - **AI Code Playground & Exercise Evaluator:** Automated architectural reviews, algorithmic time/space complexity analysis ($O(n)$ notation), style/anti-pattern audits (blocking event loops, bare excepts), refactored solutions, and tailored hands-on coding challenges with test specifications.
 - **Adaptive Spaced Repetition (SRS) & Weakness Remediation:** SuperMemo SM-2 spaced repetition engine that automatically schedules questions missed in quizzes for spaced review, tracks topic weaknesses, and synthesizes targeted AI remediation assessments with Gemini.
 - **AI Curriculum & Study Roadmap Generator:** Automatically synthesizes learner goals, target timelines, and daily study budgets into structured, multi-week learning paths grounded in catalog courses with milestone tracking and prior progress credit.
@@ -28,6 +29,12 @@ LearnMate AI is a production-grade, AI-powered personalized learning platform ba
 - **Testing:** Pytest & Pytest-Asyncio
 
 ## API Overview
+
+### Gamification, Daily Streaks & Badges (`/api/v1/gamification`)
+- `GET /api/v1/gamification/profile` - Current XP, level progress percentage, active daily streak, and recent badges.
+- `GET /api/v1/gamification/badges` - Complete catalog of achievement badges with unlock status and timestamps.
+- `GET /api/v1/gamification/leaderboard` - Competitive global learner rankings with authenticated user standing.
+- `POST /api/v1/gamification/sync` - Audit learning activity, evaluate criteria, award eligible badges, and update streaks.
 
 ### AI Code Playground & Exercise Evaluator (`/api/v1/code`)
 - `POST /api/v1/code/review` - Submit code for architectural review, scoring, complexity evaluation, and refactored solution.

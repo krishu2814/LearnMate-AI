@@ -1,6 +1,6 @@
 import enum
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Boolean, Enum, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -10,6 +10,7 @@ from app.db.base import Base, TimestampMixin, UUIDMixin
 if TYPE_CHECKING:
     from app.models.auth import RefreshToken
     from app.models.code_submission import CodeSubmission
+    from app.models.gamification import GamificationProfile, UserBadge
     from app.models.learning_path import LearningPath
     from app.models.progress import LessonProgress
     from app.models.srs import ReviewItem
@@ -91,6 +92,19 @@ class User(Base, UUIDMixin, TimestampMixin):
     )
     code_submissions: Mapped[list["CodeSubmission"]] = relationship(
         "CodeSubmission",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    gamification_profile: Mapped[Optional["GamificationProfile"]] = relationship(
+        "GamificationProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    badges: Mapped[list["UserBadge"]] = relationship(
+        "UserBadge",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin",
