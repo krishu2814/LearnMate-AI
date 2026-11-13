@@ -85,9 +85,7 @@ class AILearningPathService:
 
         # 5. Check if user has already completed any of these lessons
         user_progress = await self.learning_repo.get_user_all_progress(user_id=user_id)
-        completed_ids = {
-            p.lesson_id for p in user_progress if p.status == ProgressStatus.COMPLETED
-        }
+        completed_ids = {p.lesson_id for p in user_progress if p.status == ProgressStatus.COMPLETED}
 
         lessons = await self.learning_repo.get_lessons_by_ids(valid_ids)
         lesson_map = {lesson.id: lesson for lesson in lessons}

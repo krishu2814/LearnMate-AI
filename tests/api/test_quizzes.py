@@ -29,11 +29,15 @@ async def get_auth_headers(client: AsyncClient, email: str, password: str = "Pas
 
 async def get_seeded_quiz(client: AsyncClient) -> dict:
     """Fetch the specific seeded quiz for attempt tests."""
-    list_resp = await client.get("/api/v1/quizzes")
+    list_resp = await client.get("/api/v1/quizzes?limit=100")
     for q in list_resp.json():
         if q.get("title") == "Python Concurrency & Async Architecture Quiz":
             detail = await client.get(f"/api/v1/quizzes/{q['id']}")
             return detail.json()
+    for q in list_resp.json():
+        detail = (await client.get(f"/api/v1/quizzes/{q['id']}")).json()
+        if len(detail.get("questions", [])) >= 3:
+            return detail
     first_id = list_resp.json()[0]["id"]
     return (await client.get(f"/api/v1/quizzes/{first_id}")).json()
 
@@ -209,11 +213,7 @@ async def test_submit_quiz_attempt_invalid_question_id(client: AsyncClient):
     list_resp = await client.get("/api/v1/quizzes")
     quiz_id = list_resp.json()[0]["id"]
 
-    payload = {
-        "answers": [
-            {"question_id": str(uuid.uuid4()), "user_answer": "option"}
-        ]
-    }
+    payload = {"answers": [{"question_id": str(uuid.uuid4()), "user_answer": "option"}]}
     resp = await client.post(
         f"/api/v1/quizzes/{quiz_id}/attempts",
         json=payload,

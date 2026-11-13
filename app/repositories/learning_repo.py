@@ -181,13 +181,20 @@ class LearningRepository:
             elif additional_seconds > 0:
                 progress.time_spent_seconds += additional_seconds
 
-            if status in (ProgressStatus.IN_PROGRESS, ProgressStatus.COMPLETED) and not progress.started_at:
+            if (
+                status in (ProgressStatus.IN_PROGRESS, ProgressStatus.COMPLETED)
+                and not progress.started_at
+            ):
                 progress.started_at = now
             if status == ProgressStatus.COMPLETED and not progress.completed_at:
                 progress.completed_at = now
         else:
-            initial_time = time_spent_seconds if time_spent_seconds is not None else additional_seconds
-            started_at = now if status in (ProgressStatus.IN_PROGRESS, ProgressStatus.COMPLETED) else None
+            initial_time = (
+                time_spent_seconds if time_spent_seconds is not None else additional_seconds
+            )
+            started_at = (
+                now if status in (ProgressStatus.IN_PROGRESS, ProgressStatus.COMPLETED) else None
+            )
             completed_at = now if status == ProgressStatus.COMPLETED else None
 
             progress = LessonProgress(

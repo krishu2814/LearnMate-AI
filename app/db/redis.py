@@ -1,4 +1,3 @@
-
 import redis.asyncio as aioredis
 
 from app.core.config import settings

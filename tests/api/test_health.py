@@ -55,4 +55,3 @@ async def test_unhandled_exception_handler():
     assert body["error"]["code"] == "INTERNAL_SERVER_ERROR"
     assert body["error"]["request_id"] == "req-test-uuid"
     assert body["error"]["message"] == "An unexpected server error occurred."
-

@@ -5,6 +5,7 @@ LearnMate AI is a production-grade, AI-powered personalized learning platform ba
 ## Core Features
 
 - **Authentication & Security:** Argon2id password hashing, JWT stateless access tokens, high-entropy opaque refresh tokens with automated token rotation and token-reuse attack detection.
+- **AI Code Playground & Exercise Evaluator:** Automated architectural reviews, algorithmic time/space complexity analysis ($O(n)$ notation), style/anti-pattern audits (blocking event loops, bare excepts), refactored solutions, and tailored hands-on coding challenges with test specifications.
 - **Adaptive Spaced Repetition (SRS) & Weakness Remediation:** SuperMemo SM-2 spaced repetition engine that automatically schedules questions missed in quizzes for spaced review, tracks topic weaknesses, and synthesizes targeted AI remediation assessments with Gemini.
 - **AI Curriculum & Study Roadmap Generator:** Automatically synthesizes learner goals, target timelines, and daily study budgets into structured, multi-week learning paths grounded in catalog courses with milestone tracking and prior progress credit.
 - **Socratic AI Tutor & Multi-Style Lesson Explainer:** Context-aware tutoring with multi-style pedagogical explanations (`beginner`/ELI5, `deep_dive`, `analogy`, `practical`) and interactive Socratic mentorship with conversational continuity.
@@ -27,6 +28,12 @@ LearnMate AI is a production-grade, AI-powered personalized learning platform ba
 - **Testing:** Pytest & Pytest-Asyncio
 
 ## API Overview
+
+### AI Code Playground & Exercise Evaluator (`/api/v1/code`)
+- `POST /api/v1/code/review` - Submit code for architectural review, scoring, complexity evaluation, and refactored solution.
+- `GET /api/v1/code/submissions` - List historical code submissions and review reports for authenticated learner.
+- `GET /api/v1/code/submissions/{id}` - Retrieve detailed evaluation report with row-level ownership isolation.
+- `POST /api/v1/code/exercises/generate` - Generate tailored coding challenges with test cases, boilerplate starter code, and progressive hints.
 
 ### Spaced Repetition & Weakness Remediation (`/api/v1/srs`)
 - `GET /api/v1/srs/queue` - Retrieve questions due for review based on SM-2 intervals, with weak-topic analytics.

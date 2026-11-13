@@ -8,7 +8,9 @@ def random_email() -> str:
     return f"student_{uuid.uuid4().hex[:8]}@example.com"
 
 
-async def create_authenticated_client(client: AsyncClient, email: str, password: str = "Password123!") -> dict:
+async def create_authenticated_client(
+    client: AsyncClient, email: str, password: str = "Password123!"
+) -> dict:
     """Helper to register, login and return auth headers."""
     await client.post(
         "/api/v1/auth/register",

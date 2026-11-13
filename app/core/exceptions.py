@@ -155,9 +155,13 @@ async def app_exception_handler(request: Request, exc: AppException) -> JSONResp
     )
 
 
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     request_id = request.headers.get("X-Request-ID")
-    status_code = getattr(status, "HTTP_422_UNPROCESSABLE_CONTENT", status.HTTP_422_UNPROCESSABLE_ENTITY)
+    status_code = getattr(
+        status, "HTTP_422_UNPROCESSABLE_CONTENT", status.HTTP_422_UNPROCESSABLE_ENTITY
+    )
     return build_error_response(
         status_code=status_code,
         code="VALIDATION_ERROR",
@@ -187,7 +191,9 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     request_id = request.headers.get("X-Request-ID")
-    logger.error("unhandled_server_error", exc_info=exc, path=str(request.url), request_id=request_id)
+    logger.error(
+        "unhandled_server_error", exc_info=exc, path=str(request.url), request_id=request_id
+    )
     return build_error_response(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         code="INTERNAL_SERVER_ERROR",

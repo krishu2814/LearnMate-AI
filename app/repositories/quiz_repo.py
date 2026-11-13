@@ -13,11 +13,7 @@ class QuizRepository:
         self.db = db
 
     async def get_quiz_by_id(self, quiz_id: str) -> Quiz | None:
-        stmt = (
-            select(Quiz)
-            .where(Quiz.id == quiz_id)
-            .options(selectinload(Quiz.questions))
-        )
+        stmt = select(Quiz).where(Quiz.id == quiz_id).options(selectinload(Quiz.questions))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -74,9 +70,8 @@ class QuizRepository:
         skip: int = 0,
         limit: int = 20,
     ) -> tuple[Sequence[QuizAttempt], int]:
-        count_stmt = (
-            select(func.count(QuizAttempt.id))
-            .where(QuizAttempt.quiz_id == quiz_id, QuizAttempt.user_id == user_id)
+        count_stmt = select(func.count(QuizAttempt.id)).where(
+            QuizAttempt.quiz_id == quiz_id, QuizAttempt.user_id == user_id
         )
         total = (await self.db.execute(count_stmt)).scalar() or 0
 
@@ -96,10 +91,7 @@ class QuizRepository:
         skip: int = 0,
         limit: int = 20,
     ) -> tuple[Sequence[QuizAttempt], int]:
-        count_stmt = (
-            select(func.count(QuizAttempt.id))
-            .where(QuizAttempt.user_id == user_id)
-        )
+        count_stmt = select(func.count(QuizAttempt.id)).where(QuizAttempt.user_id == user_id)
         total = (await self.db.execute(count_stmt)).scalar() or 0
 
         stmt = (

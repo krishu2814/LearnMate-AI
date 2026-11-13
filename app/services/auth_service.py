@@ -81,7 +81,9 @@ class AuthService:
                 user_id=stored_token.user_id,
                 revoked_sessions=revoked_count,
             )
-            raise AuthException("Security alert: Token reuse detected. All active sessions have been terminated.")
+            raise AuthException(
+                "Security alert: Token reuse detected. All active sessions have been terminated."
+            )
 
         if not stored_token.is_active:
             raise AuthException("Refresh token has expired. Please log in again.")

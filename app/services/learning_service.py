@@ -1,4 +1,3 @@
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundException
@@ -158,7 +157,9 @@ class LearningService:
 
     async def get_dashboard_progress(self, user_id: str) -> DashboardProgressResponse:
         all_progress = await self.repo.get_user_all_progress(user_id)
-        completed_lesson_ids = {p.lesson_id for p in all_progress if p.status == ProgressStatus.COMPLETED}
+        completed_lesson_ids = {
+            p.lesson_id for p in all_progress if p.status == ProgressStatus.COMPLETED
+        }
         in_progress_count = sum(1 for p in all_progress if p.status == ProgressStatus.IN_PROGRESS)
         total_time_spent = sum(p.time_spent_seconds for p in all_progress)
 
@@ -168,14 +169,14 @@ class LearningService:
 
         for course in courses:
             course_lesson_ids = [
-                lesson.id
-                for module in course.modules
-                for lesson in module.lessons
+                lesson.id for module in course.modules for lesson in module.lessons
             ]
             course_total = len(course_lesson_ids)
             total_lessons_available += course_total
             course_completed = sum(1 for lid in course_lesson_ids if lid in completed_lesson_ids)
-            course_pct = round((course_completed / course_total) * 100, 1) if course_total > 0 else 0.0
+            course_pct = (
+                round((course_completed / course_total) * 100, 1) if course_total > 0 else 0.0
+            )
 
             courses_progress.append(
                 CourseProgressSummary(

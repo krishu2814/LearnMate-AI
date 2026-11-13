@@ -44,9 +44,15 @@ class QuizAnswerSubmit(BaseModel):
 
 
 class QuizAttemptCreate(BaseModel):
-    answers: list[QuizAnswerSubmit] = Field(..., min_length=1, description="List of submitted answers")
-    time_seconds: int = Field(default=0, ge=0, description="Duration in seconds taken for the attempt")
-    is_exam_mode: bool = Field(default=False, description="Whether the attempt was taken under exam conditions")
+    answers: list[QuizAnswerSubmit] = Field(
+        ..., min_length=1, description="List of submitted answers"
+    )
+    time_seconds: int = Field(
+        default=0, ge=0, description="Duration in seconds taken for the attempt"
+    )
+    is_exam_mode: bool = Field(
+        default=False, description="Whether the attempt was taken under exam conditions"
+    )
 
 
 class QuizAnswerResultResponse(BaseModel):

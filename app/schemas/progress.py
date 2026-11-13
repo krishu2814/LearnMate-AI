@@ -8,7 +8,9 @@ from app.models.progress import ProgressStatus
 class LessonProgressUpdate(BaseModel):
     status: ProgressStatus = Field(default=ProgressStatus.COMPLETED)
     time_spent_seconds: int | None = Field(None, ge=0, description="Total seconds spent on lesson")
-    additional_seconds: int | None = Field(0, ge=0, description="Seconds to add to cumulative time spent")
+    additional_seconds: int | None = Field(
+        0, ge=0, description="Seconds to add to cumulative time spent"
+    )
 
 
 class LessonProgressResponse(BaseModel):

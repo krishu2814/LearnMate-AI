@@ -11,6 +11,7 @@ class Base(DeclarativeBase):
 
 class UUIDMixin:
     """Mixin that adds a UUID string primary key."""
+
     id: Mapped[str] = mapped_column(
         String(36),
         primary_key=True,
@@ -26,6 +27,7 @@ class UUIDMixin:
 
 class TimestampMixin:
     """Mixin that adds created_at and updated_at timestamps."""
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),

@@ -16,6 +16,13 @@ from app.schemas.ai import (
     AILessonExplanationPayload,
     AITutorChatPayload,
 )
+from app.schemas.code import (
+    AICodeReviewPayload,
+    AICodingExercisePayload,
+    CodeIssue,
+    CodeIssueSeverity,
+    CodingTestCase,
+)
 
 
 class GeminiProvider:
@@ -210,6 +217,66 @@ class GeminiProvider:
             logger.error("gemini_tutor_chat_failed", error=str(exc))
             return self._mock_tutor_chat(user_message=user_message)
 
+    async def review_code(
+        self,
+        prompt: str,
+        source_code: str,
+        language: str = "python",
+    ) -> AICodeReviewPayload:
+        """Perform architectural review and algorithmic complexity estimation of student code."""
+        if not self.is_configured:
+            return self._mock_code_review(source_code=source_code, language=language)
+
+        try:
+            assert self._client is not None
+            response = await self._client.aio.models.generate_content(
+                model=self.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=AICodeReviewPayload,
+                    temperature=0.1,
+                ),
+            )
+
+            raw_text = response.text or "{}"
+            payload_data = json.loads(raw_text)
+            return AICodeReviewPayload.model_validate(payload_data)
+
+        except Exception as exc:  # noqa: BLE001
+            logger.error("gemini_code_review_failed", error=str(exc))
+            return self._mock_code_review(source_code=source_code, language=language)
+
+    async def generate_exercise(
+        self,
+        prompt: str,
+        topic: str,
+        difficulty: DifficultyLevel = DifficultyLevel.INTERMEDIATE,
+    ) -> AICodingExercisePayload:
+        """Generate a practical coding challenge with test specifications."""
+        if not self.is_configured:
+            return self._mock_exercise(topic=topic, difficulty=difficulty)
+
+        try:
+            assert self._client is not None
+            response = await self._client.aio.models.generate_content(
+                model=self.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=AICodingExercisePayload,
+                    temperature=0.3,
+                ),
+            )
+
+            raw_text = response.text or "{}"
+            payload_data = json.loads(raw_text)
+            return AICodingExercisePayload.model_validate(payload_data)
+
+        except Exception as exc:  # noqa: BLE001
+            logger.error("gemini_exercise_generation_failed", error=str(exc))
+            return self._mock_exercise(topic=topic, difficulty=difficulty)
+
     # =========================================================================
     # Fallback Generators for Offline Dev and Unit Testing
     # =========================================================================
@@ -285,7 +352,6 @@ class GeminiProvider:
         daily_minutes: int = 60,
     ) -> AIGeneratedCurriculumPayload:
         """Deterministic fallback curriculum generator."""
-        # Select up to 6 available lessons from catalog
         selected = available_lesson_ids[:6] if available_lesson_ids else []
         weeks = max(1, round(total_days / 7))
         milestones = [
@@ -385,5 +451,108 @@ class GeminiProvider:
                 "Event Loop Mechanics & Cooperative Multitasking",
                 "Connection Pooling and QueuePool Management",
                 "Stateless Authentication and Token Rotation",
+            ],
+        )
+
+    def _mock_code_review(self, source_code: str, language: str) -> AICodeReviewPayload:
+        """Deterministic fallback code reviewer."""
+        issues = []
+        score = 88
+
+        if "time.sleep" in source_code:
+            issues.append(
+                CodeIssue(
+                    line_number=1,
+                    severity=CodeIssueSeverity.WARNING,
+                    message="Blocking synchronous 'time.sleep' detected in asynchronous application code.",
+                    suggestion="Replace 'time.sleep' with 'await asyncio.sleep' to prevent blocking the event loop.",
+                )
+            )
+            score -= 20
+
+        if "except:" in source_code:
+            issues.append(
+                CodeIssue(
+                    line_number=None,
+                    severity=CodeIssueSeverity.INFO,
+                    message="Bare except clause detected.",
+                    suggestion="Catch specific exception types (e.g. Exception or domain errors) to avoid suppressing system signals.",
+                )
+            )
+            score -= 5
+
+        refactored = (
+            f"# Optimized & Refactored {language.capitalize()} Solution\n"
+            "import asyncio\n"
+            "from collections.abc import AsyncGenerator\n\n"
+            "async def process_pipeline(items: list[str]) -> AsyncGenerator[str, None]:\n"
+            '    """Process items asynchronously without blocking."""\n'
+            "    for item in items:\n"
+            "        await asyncio.sleep(0.01)  # Non-blocking yield\n"
+            "        yield item.strip().upper()\n"
+        )
+
+        return AICodeReviewPayload(
+            score=max(40, score),
+            is_passed=score >= 75,
+            time_complexity="O(n)",
+            space_complexity="O(1)",
+            review_summary=(
+                "The code exhibits good structural modularity and clear logic flow. "
+                "The algorithm achieves linear runtime complexity with minimal auxiliary space overhead."
+            ),
+            strengths=[
+                "Clean variable naming and clear single responsibility",
+                "Good utilization of idiomatic constructs",
+                "Maintainable function structure with manageable cyclomatic complexity",
+            ],
+            issues=issues,
+            refactored_code=refactored,
+        )
+
+    def _mock_exercise(self, topic: str, difficulty: DifficultyLevel) -> AICodingExercisePayload:
+        """Deterministic fallback coding exercise generator."""
+        return AICodingExercisePayload(
+            title=f"Hands-On Challenge: {topic}",
+            description=(
+                f"Implement a high-throughput, asynchronous pipeline for {topic}. "
+                "Your implementation must handle connection exceptions gracefully and yield results cooperatively."
+            ),
+            difficulty=difficulty,
+            starter_code=(
+                "import asyncio\n\n"
+                "async def execute_task(data: list[int]) -> list[int]:\n"
+                '    """TODO: Process and filter integers asynchronously."""\n'
+                "    pass\n"
+            ),
+            solution_code=(
+                "import asyncio\n\n"
+                "async def execute_task(data: list[int]) -> list[int]:\n"
+                "    await asyncio.sleep(0.01)\n"
+                "    return [x * 2 for x in data if x > 0]\n"
+            ),
+            test_cases=[
+                CodingTestCase(
+                    name="Positive Numbers",
+                    input_description="data=[1, 2, 3]",
+                    expected_output="[2, 4, 6]",
+                    is_hidden=False,
+                ),
+                CodingTestCase(
+                    name="Negative Filtering",
+                    input_description="data=[-1, 0, 5]",
+                    expected_output="[10]",
+                    is_hidden=False,
+                ),
+                CodingTestCase(
+                    name="Empty Input Edge Case",
+                    input_description="data=[]",
+                    expected_output="[]",
+                    is_hidden=True,
+                ),
+            ],
+            hints=[
+                "Remember to use list comprehensions for concise filtering.",
+                "Ensure asynchronous calls use 'await' properly.",
             ],
         )

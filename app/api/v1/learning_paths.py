@@ -86,7 +86,9 @@ async def update_learning_path(
     Enforces row-level ownership: returns 404 if path belongs to another user.
     """
     service = LearningService(db)
-    return await service.update_learning_path(path_id=path_id, user_id=current_user.id, payload=payload)
+    return await service.update_learning_path(
+        path_id=path_id, user_id=current_user.id, payload=payload
+    )
 
 
 @router.delete(

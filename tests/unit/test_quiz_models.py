@@ -60,6 +60,7 @@ async def test_quiz_and_questions_cascade(db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_quiz_attempt_and_answer_lifecycle(db_session: AsyncSession):
     import uuid
+
     user = User(
         email=f"quiz_unit_test_{uuid.uuid4().hex[:8]}@example.com",
         password_hash="hashed_pwd",
@@ -109,9 +110,7 @@ async def test_quiz_attempt_and_answer_lifecycle(db_session: AsyncSession):
     await db_session.commit()
 
     # Query attempt
-    attempt_res = await db_session.execute(
-        select(QuizAttempt).where(QuizAttempt.id == attempt.id)
-    )
+    attempt_res = await db_session.execute(select(QuizAttempt).where(QuizAttempt.id == attempt.id))
     retrieved_attempt = attempt_res.scalar_one()
     assert retrieved_attempt.score == 100.0
     assert retrieved_attempt.correct_count == 1

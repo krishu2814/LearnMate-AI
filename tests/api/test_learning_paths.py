@@ -148,7 +148,9 @@ async def test_row_level_ownership_isolation(client: AsyncClient):
         "daily_minutes": 45,
         "lesson_ids": [],
     }
-    user_a_resp = await client.post("/api/v1/learning-paths", json=create_payload, headers=user_a_headers)
+    user_a_resp = await client.post(
+        "/api/v1/learning-paths", json=create_payload, headers=user_a_headers
+    )
     assert user_a_resp.status_code == 201
     user_a_path_id = user_a_resp.json()["id"]
 
@@ -178,7 +180,9 @@ async def test_row_level_ownership_isolation(client: AsyncClient):
     assert user_a_path_id not in b_path_ids
 
     # 5. User A verifies their path was not modified or deleted
-    user_a_verify = await client.get(f"/api/v1/learning-paths/{user_a_path_id}", headers=user_a_headers)
+    user_a_verify = await client.get(
+        f"/api/v1/learning-paths/{user_a_path_id}", headers=user_a_headers
+    )
     assert user_a_verify.status_code == 200
     assert user_a_verify.json()["title"] == "User A Private Learning Path"
 
@@ -190,7 +194,12 @@ async def test_update_learning_path(client: AsyncClient):
 
     create_resp = await client.post(
         "/api/v1/learning-paths",
-        json={"title": "Initial Title", "goal": "Initial Goal", "total_days": 30, "daily_minutes": 60},
+        json={
+            "title": "Initial Title",
+            "goal": "Initial Goal",
+            "total_days": 30,
+            "daily_minutes": 60,
+        },
         headers=headers,
     )
     path_id = create_resp.json()["id"]
@@ -222,7 +231,12 @@ async def test_delete_learning_path(client: AsyncClient):
 
     create_resp = await client.post(
         "/api/v1/learning-paths",
-        json={"title": "Path To Delete", "goal": "Testing deletion", "total_days": 10, "daily_minutes": 30},
+        json={
+            "title": "Path To Delete",
+            "goal": "Testing deletion",
+            "total_days": 10,
+            "daily_minutes": 30,
+        },
         headers=headers,
     )
     path_id = create_resp.json()["id"]

@@ -9,6 +9,7 @@ from app.db.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
     from app.models.auth import RefreshToken
+    from app.models.code_submission import CodeSubmission
     from app.models.learning_path import LearningPath
     from app.models.progress import LessonProgress
     from app.models.srs import ReviewItem
@@ -84,6 +85,12 @@ class User(Base, UUIDMixin, TimestampMixin):
     )
     review_items: Mapped[list["ReviewItem"]] = relationship(
         "ReviewItem",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    code_submissions: Mapped[list["CodeSubmission"]] = relationship(
+        "CodeSubmission",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin",

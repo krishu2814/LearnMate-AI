@@ -8,9 +8,7 @@ def random_email() -> str:
     return f"srs_learner_{uuid.uuid4().hex[:8]}@example.com"
 
 
-async def get_auth_headers(
-    client: AsyncClient, email: str, password: str = "Password123!"
-) -> dict:
+async def get_auth_headers(client: AsyncClient, email: str, password: str = "Password123!") -> dict:
     await client.post(
         "/api/v1/auth/register",
         json={
@@ -101,8 +99,7 @@ async def test_srs_review_submission_lifecycle(client: AsyncClient):
         json={
             "time_seconds": 30,
             "answers": [
-                {"question_id": q["id"], "user_answer": "deliberately wrong"}
-                for q in questions
+                {"question_id": q["id"], "user_answer": "deliberately wrong"} for q in questions
             ],
         },
     )
@@ -163,9 +160,7 @@ async def test_generate_ai_remediation_quiz(client: AsyncClient):
         headers=headers,
         json={
             "time_seconds": 25,
-            "answers": [
-                {"question_id": q["id"], "user_answer": "wrong"} for q in questions
-            ],
+            "answers": [{"question_id": q["id"], "user_answer": "wrong"} for q in questions],
         },
     )
 
@@ -203,9 +198,7 @@ async def test_srs_row_level_ownership_isolation(client: AsyncClient):
         headers=headers_a,
         json={
             "time_seconds": 20,
-            "answers": [
-                {"question_id": q["id"], "user_answer": "wrong"} for q in questions
-            ],
+            "answers": [{"question_id": q["id"], "user_answer": "wrong"} for q in questions],
         },
     )
     assert att_resp.status_code == 201

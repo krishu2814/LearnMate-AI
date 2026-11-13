@@ -32,9 +32,7 @@ def build_quiz_generation_prompt(
             f"Instruction: Anchor the questions specifically in the concepts, nuances, and code taught in this lesson content.\n"
         )
     else:
-        prompt += (
-            f"\nInstruction: Base the questions on modern industry best practices and core foundational knowledge for {topic}.\n"
-        )
+        prompt += f"\nInstruction: Base the questions on modern industry best practices and core foundational knowledge for {topic}.\n"
 
     if custom_instructions:
         prompt += f"\nCustom Pedagogical Guidance: {custom_instructions}\n"

@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, Field
 
 from app.models.user import SkillLevel

@@ -93,4 +93,3 @@ class ReviewItem(Base, UUIDMixin, TimestampMixin):
             f"<ReviewItem user={self.user_id} q={self.question_id} "
             f"interval={self.interval_days}d due={self.next_review_at}>"
         )
-

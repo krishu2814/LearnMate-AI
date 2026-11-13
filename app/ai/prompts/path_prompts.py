@@ -44,4 +44,3 @@ def build_curriculum_prompt(
         f"5. Include 3-5 concrete 'study_tips' (e.g., active recall strategies, code repetition, project application).\n"
     )
     return prompt
-

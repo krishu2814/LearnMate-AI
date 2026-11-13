@@ -21,9 +21,7 @@ class ProgressStatus(enum.StrEnum):
 
 class LessonProgress(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "lesson_progress"
-    __table_args__ = (
-        Index("ix_lesson_progress_user_lesson", "user_id", "lesson_id", unique=True),
-    )
+    __table_args__ = (Index("ix_lesson_progress_user_lesson", "user_id", "lesson_id", unique=True),)
 
     user_id: Mapped[str] = mapped_column(
         String(36),
