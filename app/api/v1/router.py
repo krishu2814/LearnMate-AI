@@ -4,6 +4,7 @@ from app.api.v1.ai import router as ai_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.code import router as code_router
 from app.api.v1.courses import router as courses_router
+from app.api.v1.flashcards import router as flashcards_router
 from app.api.v1.gamification import router as gamification_router
 from app.api.v1.learning_paths import router as learning_paths_router
 from app.api.v1.lessons import router as lessons_router
@@ -24,3 +25,4 @@ api_v1_router.include_router(ai_router)
 api_v1_router.include_router(srs_router)
 api_v1_router.include_router(code_router)
 api_v1_router.include_router(gamification_router)
+api_v1_router.include_router(flashcards_router)

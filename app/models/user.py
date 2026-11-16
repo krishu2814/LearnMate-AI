@@ -10,6 +10,7 @@ from app.db.base import Base, TimestampMixin, UUIDMixin
 if TYPE_CHECKING:
     from app.models.auth import RefreshToken
     from app.models.code_submission import CodeSubmission
+    from app.models.flashcard import FlashcardDeck
     from app.models.gamification import GamificationProfile, UserBadge
     from app.models.learning_path import LearningPath
     from app.models.progress import LessonProgress
@@ -105,6 +106,12 @@ class User(Base, UUIDMixin, TimestampMixin):
     )
     badges: Mapped[list["UserBadge"]] = relationship(
         "UserBadge",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    flashcard_decks: Mapped[list["FlashcardDeck"]] = relationship(
+        "FlashcardDeck",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin",

@@ -5,6 +5,7 @@ LearnMate AI is a production-grade, AI-powered personalized learning platform ba
 ## Core Features
 
 - **Authentication & Security:** Argon2id password hashing, JWT stateless access tokens, high-entropy opaque refresh tokens with automated token rotation and token-reuse attack detection.
+- **Active Recall Flashcard Decks Studio:** Automated AI card generation from lessons/topics with Gemini structured schemas, manual deck authoring, Leitner 5-box spaced study sessions, mastery state tracking (`new`, `learning`, `mastered`), and integrated gamification rewards.
 - **Gamification, Streaks & Achievements:** RPG leveling progression with quadratic XP scaling, daily active study streaks with longest streak preservation, automated milestone badge awards, real-time action hooks, and global learner leaderboards.
 - **AI Code Playground & Exercise Evaluator:** Automated architectural reviews, algorithmic time/space complexity analysis ($O(n)$ notation), style/anti-pattern audits (blocking event loops, bare excepts), refactored solutions, and tailored hands-on coding challenges with test specifications.
 - **Adaptive Spaced Repetition (SRS) & Weakness Remediation:** SuperMemo SM-2 spaced repetition engine that automatically schedules questions missed in quizzes for spaced review, tracks topic weaknesses, and synthesizes targeted AI remediation assessments with Gemini.
@@ -29,6 +30,15 @@ LearnMate AI is a production-grade, AI-powered personalized learning platform ba
 - **Testing:** Pytest & Pytest-Asyncio
 
 ## API Overview
+
+### Active Recall Flashcard Decks Studio (`/api/v1/flashcards`)
+- `POST /api/v1/flashcards/generate` - Generate an active recall flashcard deck from topic or lesson context.
+- `POST /api/v1/flashcards/decks` - Author custom flashcard decks and cards manually.
+- `GET /api/v1/flashcards/decks` - List learner decks with aggregated Leitner mastery distribution stats.
+- `GET /api/v1/flashcards/decks/{deck_id}` - Retrieve deck metadata and all contained cards.
+- `PATCH /api/v1/flashcards/decks/{deck_id}` - Update deck title, topic, description, or visibility.
+- `DELETE /api/v1/flashcards/decks/{deck_id}` - Permanently delete a flashcard deck and its cards.
+- `POST /api/v1/flashcards/decks/{deck_id}/study` - Submit Leitner card self-assessments (1-4) and earn study XP.
 
 ### Gamification, Daily Streaks & Badges (`/api/v1/gamification`)
 - `GET /api/v1/gamification/profile` - Current XP, level progress percentage, active daily streak, and recent badges.

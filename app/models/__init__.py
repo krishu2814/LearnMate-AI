@@ -2,6 +2,7 @@ from app.db.base import Base
 from app.models.auth import RefreshToken
 from app.models.code_submission import CodeSubmission
 from app.models.course import Course, DifficultyLevel, Lesson, Module
+from app.models.flashcard import Flashcard, FlashcardDeck, MasteryStatus
 from app.models.gamification import Badge, GamificationProfile, UserBadge
 from app.models.learning_path import ItemType, LearningPath, LearningPathItem, PathStatus
 from app.models.progress import LessonProgress, ProgressStatus
@@ -15,12 +16,15 @@ __all__ = [
     "CodeSubmission",
     "Course",
     "DifficultyLevel",
+    "Flashcard",
+    "FlashcardDeck",
     "GamificationProfile",
     "ItemType",
     "LearningPath",
     "LearningPathItem",
     "Lesson",
     "LessonProgress",
+    "MasteryStatus",
     "Module",
     "PathStatus",
     "ProgressStatus",

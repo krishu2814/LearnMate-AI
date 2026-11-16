@@ -23,6 +23,10 @@ from app.schemas.code import (
     CodeIssueSeverity,
     CodingTestCase,
 )
+from app.schemas.flashcard import (
+    AIGeneratedCard,
+    AIGeneratedDeckPayload,
+)
 
 
 class GeminiProvider:
@@ -276,6 +280,37 @@ class GeminiProvider:
         except Exception as exc:  # noqa: BLE001
             logger.error("gemini_exercise_generation_failed", error=str(exc))
             return self._mock_exercise(topic=topic, difficulty=difficulty)
+
+    async def generate_flashcards(
+        self,
+        prompt: str,
+        topic: str,
+        count: int = 5,
+        difficulty: DifficultyLevel = DifficultyLevel.INTERMEDIATE,
+    ) -> AIGeneratedDeckPayload:
+        """Synthesize active recall flashcard deck using Gemini structured JSON outputs."""
+        if not self.is_configured:
+            return self._mock_deck_generation(topic=topic, count=count)
+
+        try:
+            assert self._client is not None
+            response = await self._client.aio.models.generate_content(
+                model=self.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=AIGeneratedDeckPayload,
+                    temperature=0.2,
+                ),
+            )
+
+            raw_text = response.text or "{}"
+            payload_data = json.loads(raw_text)
+            return AIGeneratedDeckPayload.model_validate(payload_data)
+
+        except Exception as exc:  # noqa: BLE001
+            logger.error("gemini_flashcard_generation_failed", error=str(exc))
+            return self._mock_deck_generation(topic=topic, count=count)
 
     # =========================================================================
     # Fallback Generators for Offline Dev and Unit Testing
@@ -555,4 +590,24 @@ class GeminiProvider:
                 "Remember to use list comprehensions for concise filtering.",
                 "Ensure asynchronous calls use 'await' properly.",
             ],
+        )
+
+    def _mock_deck_generation(self, topic: str, count: int) -> AIGeneratedDeckPayload:
+        """Deterministic high-yield fallback flashcard generator for testing and offline environments."""
+        cards = []
+        for i in range(1, count + 1):
+            cards.append(
+                AIGeneratedCard(
+                    front=f"In {topic}, what is the primary architectural purpose of core principle #{i}?",
+                    back=f"Core principle #{i} in {topic} isolates side effects, guarantees concurrency safety, and prevents unhandled blocking states.",
+                    hint=f"Focus on state isolation and non-blocking semantics for {topic}.",
+                    key_concept=f"{topic} Principle #{i}",
+                )
+            )
+
+        return AIGeneratedDeckPayload(
+            title=f"Mastery Flashcards: {topic}",
+            description=f"Curated active recall cards testing core concepts, gotchas, and patterns for {topic}.",
+            topic=topic,
+            cards=cards,
         )
